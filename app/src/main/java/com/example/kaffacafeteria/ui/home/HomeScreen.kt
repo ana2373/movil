@@ -82,13 +82,6 @@ fun HomeScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    "Café del que te enamoras desde el primer sorbo",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colorScheme.onPrimary.copy(alpha = 0.85f)
-                )
-
                 val user = state.user
                 if (!isGuest && user != null) {
                     Spacer(modifier = Modifier.height(14.dp))
