@@ -26,7 +26,11 @@ import com.example.kaffacafeteria.util.createViewModel
 
 @Composable
 fun LoginScreen(
+<<<<<<< HEAD
     onLoginSuccess: (com.example.kaffacafeteria.domain.model.User?) -> Unit,
+=======
+    onLoginSuccess: () -> Unit,
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
     onNavigateToRegister: () -> Unit,
     viewModel: LoginViewModel = createViewModel { LoginViewModel(it) }
 ) {
@@ -36,7 +40,11 @@ fun LoginScreen(
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(state.isLoggedIn) {
+<<<<<<< HEAD
         if (state.isLoggedIn) onLoginSuccess(state.user)
+=======
+        if (state.isLoggedIn) onLoginSuccess()
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
     }
 
     Column(

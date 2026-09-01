@@ -7,8 +7,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kaffacafeteria.KaffaApp
+<<<<<<< HEAD
 import com.example.kaffacafeteria.domain.model.User
 import com.example.kaffacafeteria.util.Resource
+=======
+import com.example.kaffacafeteria.data.remote.dto.UsuarioCreateRequest
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 import kotlinx.coroutines.launch
 
 data class RegisterUiState(
@@ -19,7 +23,10 @@ data class RegisterUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val isRegistered: Boolean = false,
+<<<<<<< HEAD
     val user: User? = null,
+=======
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
     val nombreError: String? = null,
     val correoError: String? = null,
     val passwordError: String? = null,
@@ -27,7 +34,11 @@ data class RegisterUiState(
 )
 
 class RegisterViewModel(application: Application) : AndroidViewModel(application) {
+<<<<<<< HEAD
     private val authRepository = (application as KaffaApp).container.authRepository
+=======
+    private val userApi = (application as KaffaApp).container.userApi
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 
     var uiState by mutableStateOf(RegisterUiState())
         private set
@@ -43,6 +54,7 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
 
         if (s.nombre.isBlank()) { uiState = uiState.copy(nombreError = "El nombre es requerido"); hasError = true }
         if (s.correo.isBlank()) { uiState = uiState.copy(correoError = "El correo es requerido"); hasError = true }
+<<<<<<< HEAD
         if (s.password.isBlank()) {
             uiState = uiState.copy(passwordError = "La contraseña es requerida"); hasError = true
         } else {
@@ -55,12 +67,17 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
             else if (!p.any { !it.isLetterOrDigit() }) passError = "Debe incluir un símbolo"
             if (passError != null) { uiState = uiState.copy(passwordError = passError); hasError = true }
         }
+=======
+        if (s.password.isBlank()) { uiState = uiState.copy(passwordError = "La contraseña es requerida"); hasError = true }
+        if (s.password.length < 6) { uiState = uiState.copy(passwordError = "Mínimo 6 caracteres"); hasError = true }
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
         if (s.confirmPassword.isBlank()) { uiState = uiState.copy(confirmPasswordError = "Confirma la contraseña"); hasError = true }
         if (s.password != s.confirmPassword) { uiState = uiState.copy(confirmPasswordError = "Las contraseñas no coinciden"); hasError = true }
         if (hasError) return
 
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, error = null)
+<<<<<<< HEAD
             when (val result = authRepository.register(s.nombre.trim(), s.correo.trim(), s.password)) {
                 is Resource.Success -> {
                     uiState = uiState.copy(isLoading = false, isRegistered = true, user = result.data)
@@ -69,6 +86,24 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
                     uiState = uiState.copy(isLoading = false, error = result.message)
                 }
                 is Resource.Loading -> {}
+=======
+            try {
+                val response = userApi.createUsuario(
+                    UsuarioCreateRequest(
+                        nombre = s.nombre,
+                        correo = s.correo,
+                        password = s.password,
+                        passwordConfirmation = s.confirmPassword
+                    )
+                )
+                if (response.isSuccessful) {
+                    uiState = uiState.copy(isLoading = false, isRegistered = true)
+                } else {
+                    uiState = uiState.copy(isLoading = false, error = "Error al registrarse: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                uiState = uiState.copy(isLoading = false, error = e.message ?: "Error de conexión")
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
             }
         }
     }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 
 data class ProfileUiState(
     val user: User? = null,
+<<<<<<< HEAD
     val isLoading: Boolean = false,
 
     // Edición de datos
@@ -32,6 +33,9 @@ data class ProfileUiState(
 
     val successMessage: String? = null,
     val errorMessage: String? = null
+=======
+    val isLoading: Boolean = false
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 )
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
@@ -48,6 +52,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true)
             when (val result = authRepository.getMe()) {
+<<<<<<< HEAD
                 is Resource.Success -> {
                     val u = result.data
                     uiState = uiState.copy(
@@ -57,11 +62,15 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                         editingCorreo = u.correo
                     )
                 }
+=======
+                is Resource.Success -> uiState = uiState.copy(user = result.data, isLoading = false)
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                 else -> uiState = uiState.copy(isLoading = false)
             }
         }
     }
 
+<<<<<<< HEAD
     val isAdmin: Boolean get() = uiState.user?.isAdmin == true
 
     fun updateEditingNombre(value: String) {
@@ -173,6 +182,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+=======
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
     fun logout() {
         viewModelScope.launch { authRepository.logout() }
     }

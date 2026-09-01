@@ -46,11 +46,14 @@ class ProductListViewModel(application: Application) : AndroidViewModel(applicat
                 val response = catalogApi.getProductos(perPage = 100)
                 if (response.isSuccessful) {
                     uiState = uiState.copy(productos = response.body()?.data ?: emptyList(), isLoading = false)
+<<<<<<< HEAD
                 } else {
                     uiState = uiState.copy(
                         error = "Error al cargar productos (${response.code()})",
                         isLoading = false
                     )
+=======
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                 }
             } catch (e: Exception) {
                 uiState = uiState.copy(error = e.message, isLoading = false)

@@ -1,6 +1,9 @@
 package com.example.kaffacafeteria.ui.productos
 
+<<<<<<< HEAD
 import androidx.compose.foundation.Image
+=======
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -16,7 +19,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+<<<<<<< HEAD
 import androidx.compose.ui.res.painterResource
+=======
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -25,11 +31,16 @@ import com.example.kaffacafeteria.data.remote.dto.ProductoDto
 import com.example.kaffacafeteria.ui.components.EmptyState
 import com.example.kaffacafeteria.ui.components.ErrorMessage
 import com.example.kaffacafeteria.ui.components.LoadingIndicator
+<<<<<<< HEAD
 import com.example.kaffacafeteria.ui.home.ProductDetailDialog
 import com.example.kaffacafeteria.ui.theme.*
 import com.example.kaffacafeteria.util.createViewModel
 import com.example.kaffacafeteria.util.imagenLocal
 import com.example.kaffacafeteria.util.toImageUrl
+=======
+import com.example.kaffacafeteria.ui.theme.*
+import com.example.kaffacafeteria.util.createViewModel
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,7 +51,10 @@ fun ProductListScreen(
 ) {
     val state = viewModel.uiState
     val colorScheme = MaterialTheme.colorScheme
+<<<<<<< HEAD
     var selectedProduct by remember { mutableStateOf<ProductoDto?>(null) }
+=======
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 
     Column(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
         TopAppBar(
@@ -81,11 +95,16 @@ fun ProductListScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(state.filteredProductos, key = { it.id }) { product ->
+<<<<<<< HEAD
                     ProductCard(product = product, onImageClick = { selectedProduct = product }, onBuy = { onBuy(product) })
+=======
+                    ProductCard(product = product, onBuy = { onBuy(product) })
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                 }
             }
         }
     }
+<<<<<<< HEAD
 
     selectedProduct?.let { product ->
         ProductDetailDialog(
@@ -110,6 +129,17 @@ fun ProductCard(product: ProductoDto, onBuy: () -> Unit, onImageClick: () -> Uni
                 AsyncImage(model = product.imagen.toImageUrl(), error = localImg?.let { painterResource(it) }, fallback = localImg?.let { painterResource(it) }, contentDescription = null, modifier = Modifier.fillMaxWidth().height(120.dp), contentScale = ContentScale.Crop)
             } else if (localImg != null) {
                 Image(painter = painterResource(localImg), contentDescription = null, modifier = Modifier.fillMaxWidth().height(120.dp), contentScale = ContentScale.Crop)
+=======
+}
+
+@Composable
+fun ProductCard(product: ProductoDto, onBuy: () -> Unit) {
+    val colorScheme = MaterialTheme.colorScheme
+    Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+        Column {
+            if (!product.imagen.isNullOrBlank()) {
+                AsyncImage(model = product.imagen, contentDescription = null, modifier = Modifier.fillMaxWidth().height(120.dp), contentScale = ContentScale.Crop)
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
             } else {
                 Box(modifier = Modifier.fillMaxWidth().height(120.dp).background(colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
                     Icon(Icons.Default.Coffee, contentDescription = null, tint = colorScheme.primary, modifier = Modifier.size(40.dp))

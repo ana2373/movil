@@ -124,10 +124,13 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         userForm = userForm.copy(selectedRoles = roles)
     }
 
+<<<<<<< HEAD
     fun setUserRoles(roleIds: List<Int>) {
         userForm = userForm.copy(selectedRoles = roleIds.toSet())
     }
 
+=======
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
     fun saveUser() {
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, error = null)
@@ -151,7 +154,11 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
                         nombre = userForm.nombre,
                         correo = userForm.correo,
                         password = userForm.password,
+<<<<<<< HEAD
                         passwordConfirmation = userForm.password,
+=======
+                        passwordConfirmation = userForm.passwordConfirmation,
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                         roles = userForm.selectedRoles.toList()
                     )
                     val response = userApi.createUsuario(request)

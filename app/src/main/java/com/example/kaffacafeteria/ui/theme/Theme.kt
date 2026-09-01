@@ -44,17 +44,29 @@ private val KaffaLightColors = lightColorScheme(
 
 private val KaffaDarkColors = darkColorScheme(
     primary = PrimaryGreenDark,
+<<<<<<< HEAD
     onPrimary = NearBlackDark,
+=======
+    onPrimary = PrimaryGreen,
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
     primaryContainer = LightGreenDark,
     onPrimaryContainer = LightGreen,
 
     secondary = TerracottaDark,
+<<<<<<< HEAD
     onSecondary = NearBlackDark,
+=======
+    onSecondary = NearBlack,
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
     secondaryContainer = LightTerracottaDark,
     onSecondaryContainer = LightTerracotta,
 
     tertiary = CoffeeBrownDark,
+<<<<<<< HEAD
     onTertiary = NearBlackDark,
+=======
+    onTertiary = NearBlack,
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
     tertiaryContainer = LightBrownDark,
     onTertiaryContainer = LightBrown,
 

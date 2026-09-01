@@ -1,7 +1,10 @@
 package com.example.kaffacafeteria.util
 
+<<<<<<< HEAD
 import com.example.kaffacafeteria.R
 import com.example.kaffacafeteria.data.remote.dto.ProductoDto
+=======
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -16,6 +19,7 @@ fun String?.orEmpty(): String = this ?: ""
 fun Int?.orZero(): Int = this ?: 0
 
 fun Double?.orZero(): Double = this ?: 0.0
+<<<<<<< HEAD
 
 fun String?.toImageUrl(): String? {
     if (this.isNullOrBlank()) return null
@@ -57,3 +61,5 @@ fun ProductoDto.imagenLocal(): Int? {
         ?: return null
     return options[((id % options.size) + options.size) % options.size]
 }
+=======
+>>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
