@@ -16,10 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-<<<<<<< HEAD
 import androidx.compose.ui.graphics.vector.ImageVector
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -28,48 +25,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.kaffacafeteria.R
-<<<<<<< HEAD
 import com.example.kaffacafeteria.domain.model.User
+import com.example.kaffacafeteria.ui.admin.Promocion
+import com.example.kaffacafeteria.ui.admin.PromocionesViewModel
+import com.example.kaffacafeteria.ui.admin.estaExpirada
+import com.example.kaffacafeteria.ui.theme.PrimaryGreen
 import com.example.kaffacafeteria.ui.theme.PromoPalette
 import com.example.kaffacafeteria.ui.theme.PromoPalettes
 import com.example.kaffacafeteria.ui.theme.White
 import com.example.kaffacafeteria.util.createViewModel
-import kotlin.random.Random
-
-data class PromoData(
-    val titulo: String,
-    val subtitulo: String,
-    val descripcion: String,
-    val etiqueta: String
-)
-
-val Promos = listOf(
-    PromoData("2x1 en Café", "Antes de las 11:00 am", "Visítanos hoy", "OFERTA"),
-    PromoData("Café del Mes", "Latte de Caramelo", "Prueba nuestra nueva especialidad", "NOVEDAD"),
-    PromoData("Happy Hour", "Tarde de postres", "2x1 en postres de 3 a 6 pm", "PROMO"),
-    PromoData("Desayuno Completo", "Pan + café", "El impulso que necesitas para tu día", "COMBO"),
-    PromoData("Noche de Café", "Bebidas calientes 2x1", "Después de las 6 pm", "NOCHE"),
-    PromoData("Repostería del Día", "Pan y postres frescos", "Elaborados en la cafetería del SENA", "FRESCO"),
-    PromoData("Café de Especialidad", "Granos seleccionados", "Preparado con los mejores granos", "GRANO"),
-    PromoData("Combo Pan + Postre", "Acompañamiento perfecto", "El dúo ideal para tu pausa", "COMBO")
-)
 
 @Composable
 fun SplashScreen(
     onContinue: (User?) -> Unit,
-=======
-import com.example.kaffacafeteria.ui.theme.*
-import com.example.kaffacafeteria.util.createViewModel
-
-@Composable
-fun SplashScreen(
-    onContinue: () -> Unit,
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
     onSessionState: (Boolean) -> Unit,
-    viewModel: SplashViewModel = createViewModel { SplashViewModel(it) }
+    viewModel: SplashViewModel = createViewModel { SplashViewModel(it) },
+    promosViewModel: PromocionesViewModel = createViewModel { PromocionesViewModel(it) }
 ) {
     val state = viewModel.uiState
+    val promos = promosViewModel.uiState.promociones.filter { it.activa && !it.estaExpirada() }
 
     LaunchedEffect(state.isLoading) {
         if (!state.isLoading) {
@@ -80,22 +56,20 @@ fun SplashScreen(
     if (state.isLoading) {
         LoadingSplash()
     } else {
-<<<<<<< HEAD
-        PromoSplash(user = state.user, onContinue = onContinue)
-=======
-        PromoSplash(onContinue = onContinue)
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
+        // Solo se muestran las promociones creadas por el administrador
+        val promo = promos.firstOrNull()
+        if (promo == null) {
+            BrandingSplash(onContinue = { onContinue(state.user) })
+        } else {
+            PromoSplash(promo = promo, onContinue = { onContinue(state.user) })
+        }
     }
 }
 
 @Composable
 private fun LoadingSplash() {
     Box(
-<<<<<<< HEAD
-        modifier = Modifier.fillMaxSize().background(Color(0xFF14532D)),
-=======
         modifier = Modifier.fillMaxSize().background(PrimaryGreen),
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -107,30 +81,50 @@ private fun LoadingSplash() {
 }
 
 @Composable
-<<<<<<< HEAD
-private fun PromoSplash(onContinue: (User?) -> Unit, user: User?) {
-    // Elegir una paleta diferente al azar cada vez que se abre la app
-    val promoIndex = remember { Random.nextInt(Promos.size) }
-    val paletteIndex = remember { Random.nextInt(PromoPalettes.size) }
-    val promo = Promos[promoIndex]
-    val palette = PromoPalettes[paletteIndex]
+private fun BrandingSplash(onContinue: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Brush.verticalGradient(listOf(PrimaryGreen, Color(0xFF0E2F24))))
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(48.dp))
+            Box(
+                modifier = Modifier.size(86.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.Coffee, contentDescription = null, tint = White, modifier = Modifier.size(46.dp))
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Kaffa", fontFamily = FontFamily.Serif, fontWeight = FontWeight.Black, fontSize = 44.sp, color = White)
+            Text("CAFETERÍA · SENA", color = White.copy(alpha = 0.85f), fontSize = 12.sp, letterSpacing = 3.sp)
+            Spacer(modifier = Modifier.height(28.dp))
+            Button(
+                onClick = onContinue,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(54.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = PrimaryGreen)
+            ) {
+                Text("Entrar", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            }
+            Spacer(modifier = Modifier.height(28.dp))
+        }
+    }
+}
 
-=======
-private fun PromoSplash(onContinue: () -> Unit) {
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
+@Composable
+private fun PromoSplash(promo: Promocion, onContinue: () -> Unit) {
+    val palette = PromoPalettes.getOrElse(promo.colorIndex) { PromoPalettes.first() }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-<<<<<<< HEAD
                     listOf(palette.backgroundStart, palette.backgroundEnd)
-=======
-                    listOf(
-                        Color(0xFF2B211A),
-                        Color(0xFF4A3826)
-                    )
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                 )
             )
     ) {
@@ -145,11 +139,7 @@ private fun PromoSplash(onContinue: () -> Unit) {
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
-<<<<<<< HEAD
                         modifier = Modifier.size(40.dp).clip(CircleShape).background(palette.accent),
-=======
-                        modifier = Modifier.size(40.dp).clip(CircleShape).background(Terracotta),
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(Icons.Default.Coffee, contentDescription = null, tint = White, modifier = Modifier.size(24.dp))
@@ -157,17 +147,10 @@ private fun PromoSplash(onContinue: () -> Unit) {
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text("Kaffa", color = White, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-<<<<<<< HEAD
                         Text("CAFETERÍA", color = White.copy(alpha = 0.8f), fontSize = 10.sp, letterSpacing = 2.sp)
                     }
                 }
-                IconButton(onClick = { onContinue(user) }) {
-=======
-                        Text("CAFETERÍA", color = LightBrown, fontSize = 10.sp, letterSpacing = 2.sp)
-                    }
-                }
                 IconButton(onClick = onContinue) {
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                     Surface(shape = CircleShape, color = White.copy(alpha = 0.15f)) {
                         Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
                             Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = White, modifier = Modifier.size(22.dp))
@@ -176,7 +159,6 @@ private fun PromoSplash(onContinue: () -> Unit) {
                 }
             }
 
-<<<<<<< HEAD
             Spacer(modifier = Modifier.height(16.dp))
 
             Surface(
@@ -185,7 +167,7 @@ private fun PromoSplash(onContinue: () -> Unit) {
                 modifier = Modifier.padding(horizontal = 24.dp)
             ) {
                 Text(
-                    promo.etiqueta,
+                    promo.tipo,
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                     color = palette.backgroundStart,
                     fontWeight = FontWeight.Black,
@@ -196,22 +178,32 @@ private fun PromoSplash(onContinue: () -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
-            Image(
-                painter = painterResource(R.drawable.coffee1),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(170.dp)
-                    .clip(RoundedCornerShape(28.dp))
-            )
+            if (promo.imagenUri.isNullOrBlank()) {
+                Image(
+                    painter = painterResource(R.drawable.coffee1),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(170.dp)
+                        .clip(RoundedCornerShape(28.dp))
+                )
+            } else {
+                AsyncImage(
+                    model = promo.imagenUri,
+                    contentDescription = promo.nombre,
+                    contentScale = ContentScale.Crop,
+                    error = painterResource(R.drawable.coffee1),
+                    fallback = painterResource(R.drawable.coffee1),
+                    modifier = Modifier
+                        .size(170.dp)
+                        .clip(RoundedCornerShape(28.dp))
+                )
+            }
 
-<<<<<<< HEAD
             Spacer(modifier = Modifier.height(28.dp))
 
             Text(
-                promo.titulo,
+                promo.nombre,
                 fontFamily = FontFamily.Serif,
                 fontWeight = FontWeight.Black,
                 fontSize = 34.sp,
@@ -223,39 +215,9 @@ private fun PromoSplash(onContinue: () -> Unit) {
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                promo.subtitulo,
-                fontFamily = FontFamily.Serif,
-                fontStyle = FontStyle.Italic,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                color = palette.accentBright,
-=======
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                "El sabor que despierta tus mañanas",
-                fontFamily = FontFamily.Serif,
-                fontStyle = FontStyle.Italic,
-                fontWeight = FontWeight.Bold,
-                fontSize = 30.sp,
-                color = White,
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 24.dp)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-<<<<<<< HEAD
-                promo.descripcion,
+                promo.descripcion.ifBlank { "Aprovecha esta oferta de nuestra cafetería" },
                 style = MaterialTheme.typography.bodyLarge,
-                color = White.copy(alpha = 0.85f),
-=======
-                "Café artesanal preparado con granos seleccionados",
-                style = MaterialTheme.typography.bodyLarge,
-                color = LightBrown,
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
+                color = White.copy(alpha = 0.9f),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 28.dp)
             )
@@ -264,11 +226,7 @@ private fun PromoSplash(onContinue: () -> Unit) {
 
             Card(
                 shape = RoundedCornerShape(24.dp),
-<<<<<<< HEAD
                 colors = CardDefaults.cardColors(containerColor = palette.cardBackground),
-=======
-                colors = CardDefaults.cardColors(containerColor = CardWhite),
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                 elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
             ) {
@@ -276,42 +234,26 @@ private fun PromoSplash(onContinue: () -> Unit) {
                     modifier = Modifier.fillMaxWidth().padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-<<<<<<< HEAD
-                    Text(promo.titulo, fontSize = 30.sp, fontWeight = FontWeight.Black, color = palette.titleText)
+                    Text(promo.nombre, fontSize = 24.sp, fontWeight = FontWeight.Black, color = palette.titleText, textAlign = TextAlign.Center)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(promo.subtitulo, style = MaterialTheme.typography.titleMedium, color = palette.subtitleText)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(promo.descripcion, style = MaterialTheme.typography.titleMedium, color = palette.highlightText, fontWeight = FontWeight.Bold)
-=======
-                    Text("2x1 en Café", fontSize = 30.sp, fontWeight = FontWeight.Black, color = NearBlack)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("Antes de las 11:00 am", style = MaterialTheme.typography.titleMedium, color = CoffeeBrown)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("Visítanos hoy", style = MaterialTheme.typography.titleMedium, color = Terracotta, fontWeight = FontWeight.Bold)
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
+                    Text(promo.tipo, style = MaterialTheme.typography.titleMedium, color = palette.highlightText, fontWeight = FontWeight.Bold)
+                    if (promo.descripcion.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(promo.descripcion, style = MaterialTheme.typography.bodyMedium, color = palette.subtitleText, textAlign = TextAlign.Center)
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-<<<<<<< HEAD
-                onClick = { onContinue(user) },
+                onClick = onContinue,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
                     .height(54.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = palette.accent, contentColor = palette.backgroundStart)
-=======
-                onClick = onContinue,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .height(52.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Terracotta, contentColor = White)
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
             ) {
                 Text("Entrar", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             }
@@ -319,17 +261,10 @@ private fun PromoSplash(onContinue: () -> Unit) {
             Spacer(modifier = Modifier.height(28.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-<<<<<<< HEAD
                 SocialCircle(Icons.Default.Camera, palette)
                 SocialCircle(Icons.Default.ThumbUp, palette)
                 SocialCircle(Icons.Default.Email, palette)
                 SocialCircle(Icons.Default.Chat, palette)
-=======
-                SocialCircle(Icons.Default.Camera)
-                SocialCircle(Icons.Default.ThumbUp)
-                SocialCircle(Icons.Default.Email)
-                SocialCircle(Icons.Default.Chat)
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -337,26 +272,8 @@ private fun PromoSplash(onContinue: () -> Unit) {
     }
 }
 
-<<<<<<< HEAD
-private val PromoPalette.accentBright: Color
-    get() = Color(
-        red = (accent.red * 255 + 80) / 255f,
-        green = (accent.green * 255 + 80) / 255f,
-        blue = (accent.blue * 255 + 80) / 255f
-    ).let { c ->
-        Color(
-            red = c.red.coerceAtMost(1f),
-            green = c.green.coerceAtMost(1f),
-            blue = c.blue.coerceAtMost(1f)
-        )
-    }
-
 @Composable
 private fun SocialCircle(icon: ImageVector, palette: PromoPalette) {
-=======
-@Composable
-private fun SocialCircle(icon: androidx.compose.ui.graphics.vector.ImageVector) {
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
     Surface(shape = CircleShape, color = White.copy(alpha = 0.15f)) {
         Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
             Icon(icon, contentDescription = null, tint = White, modifier = Modifier.size(20.dp))

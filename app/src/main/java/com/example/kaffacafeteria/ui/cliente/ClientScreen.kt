@@ -31,6 +31,8 @@ import coil.compose.AsyncImage
 import com.example.kaffacafeteria.data.remote.dto.ProductoDto
 import com.example.kaffacafeteria.ui.components.EmptyState
 import com.example.kaffacafeteria.ui.components.LoadingIndicator
+import com.example.kaffacafeteria.ui.theme.VerdeClaro
+import com.example.kaffacafeteria.ui.theme.White
 import com.example.kaffacafeteria.util.createViewModel
 import com.example.kaffacafeteria.util.imagenLocal
 import com.example.kaffacafeteria.util.toImageUrl
@@ -191,12 +193,12 @@ fun ClientProductCard(product: ProductoDto, onAdd: () -> Unit) {
                 Text(product.categoria?.nombre ?: "", style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("$${"%.2f".format(product.precioVenta.toDoubleOrNull() ?: 0.0)}", style = MaterialTheme.typography.titleSmall, color = colorScheme.secondary, fontWeight = FontWeight.Black)
+                    Text("$${"%.2f".format(product.precioVenta.toDoubleOrNull() ?: 0.0)}", style = MaterialTheme.typography.titleSmall, color = VerdeClaro, fontWeight = FontWeight.Black)
                     FilledIconButton(
                         onClick = onAdd,
                         modifier = Modifier.size(34.dp),
                         shape = RoundedCornerShape(10.dp),
-                        colors = IconButtonDefaults.filledIconButtonColors(containerColor = colorScheme.secondary, contentColor = colorScheme.onSecondary)
+                        colors = IconButtonDefaults.filledIconButtonColors(containerColor = VerdeClaro, contentColor = White)
                     ) {
                         Icon(Icons.Default.Add, contentDescription = "Agregar", modifier = Modifier.size(18.dp))
                     }
@@ -233,7 +235,7 @@ private fun CartSheet(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(item.producto.nombre, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text("$${"%.2f".format(item.subtotal)}", style = MaterialTheme.typography.bodySmall, color = colorScheme.secondary)
+                                Text("$${"%.2f".format(item.subtotal)}", style = MaterialTheme.typography.bodySmall, color = VerdeClaro)
                             }
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 FilledTonalIconButton(onClick = { onUpdateCantidad(item.producto.id, item.cantidad - 1) }, modifier = Modifier.size(30.dp)) { Icon(Icons.Default.Remove, contentDescription = "Restar", modifier = Modifier.size(16.dp)) }
@@ -252,7 +254,7 @@ private fun CartSheet(
                     Text("$${"%.2f".format(state.cartTotal)}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = colorScheme.primary)
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                Button(onClick = onCheckout, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(14.dp), enabled = state.cartItems.isNotEmpty(), colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary, contentColor = colorScheme.onSecondary)) {
+                Button(onClick = onCheckout, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(14.dp), enabled = state.cartItems.isNotEmpty(), colors = ButtonDefaults.buttonColors(containerColor = VerdeClaro, contentColor = White)) {
                     Text("Proceder al pago", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -360,10 +362,10 @@ fun ClientPaymentDialog(
                     }
                 },
                 enabled = !isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary, contentColor = colorScheme.onSecondary)
+                colors = ButtonDefaults.buttonColors(containerColor = VerdeClaro, contentColor = White)
             ) {
-                if (isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = colorScheme.onSecondary, strokeWidth = 2.dp)
-                else Text("Confirmar pedido", color = colorScheme.onSecondary)
+                if (isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = White, strokeWidth = 2.dp)
+                else Text("Confirmar pedido", color = White)
             }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }

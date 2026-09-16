@@ -17,7 +17,7 @@ interface TransactionApi {
     suspend fun getGastos(@Query("per_page") perPage: Int? = null): Response<PaginatedResponse<GastoDto>>
 
     @POST("gastos")
-    suspend fun createGasto(@Body request: GastoDto): Response<GastoDto>
+    suspend fun createGasto(@Body request: GastoRequest): Response<GastoDto>
 
     // Mermas
     @GET("mermas")
@@ -34,4 +34,10 @@ interface TransactionApi {
 
     @POST("proveedores")
     suspend fun createProveedor(@Body request: ProveedorDto): Response<ProveedorDto>
+
+    @PUT("proveedores/{id}")
+    suspend fun updateProveedor(@Path("id") id: Int, @Body request: ProveedorDto): Response<ProveedorDto>
+
+    @DELETE("proveedores/{id}")
+    suspend fun deleteProveedor(@Path("id") id: Int): Response<Any>
 }

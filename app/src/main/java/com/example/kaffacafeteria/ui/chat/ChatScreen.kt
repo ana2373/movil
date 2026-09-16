@@ -151,7 +151,11 @@ private fun ConversationView(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (isLoading && messages.isEmpty()) {
-                item { LoadingIndicator() }
+                item {
+                    Box(modifier = Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
             } else if (messages.isEmpty()) {
                 item {
                     Text("Sin mensajes. ¡Saluda a ${contact.nombre}!", style = MaterialTheme.typography.bodyMedium, color = colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp))

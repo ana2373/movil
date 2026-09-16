@@ -36,7 +36,7 @@ class ProveedoresViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
-    fun create(nombre: String, contacto: String?, telefono: String?, email: String?, direccion: String?) {
+    fun create(nombre: String, contacto: String?, telefono: String?, email: String?, direccion: String?, nit: String?, convenio: String?) {
         viewModelScope.launch {
             uiState = uiState.copy(isCreating = true, error = null, successMessage = null)
             try {
@@ -44,6 +44,7 @@ class ProveedoresViewModel(application: Application) : AndroidViewModel(applicat
                     ProveedorDto(
                         id = 0, nombre = nombre, contacto = contacto, telefono = telefono,
                         email = email, direccion = direccion, activo = true,
+                        nit = nit, convenio = convenio,
                         created_at = null, updated_at = null
                     )
                 )
@@ -51,6 +52,38 @@ class ProveedoresViewModel(application: Application) : AndroidViewModel(applicat
                 load()
             } catch (e: Exception) {
                 uiState = uiState.copy(isCreating = false, error = e.message)
+            }
+        }
+    }
+
+    fun update(id: Int, nombre: String, contacto: String?, telefono: String?, email: String?, direccion: String?, nit: String?, convenio: String?) {
+        viewModelScope.launch {
+            uiState = uiState.copy(isCreating = true, error = null, successMessage = null)
+            try {
+                val response = transactionApi.updateProveedor(
+                    id,
+                    ProveedorDto(
+                        id = id, nombre = nombre, contacto = contacto, telefono = telefono,
+                        email = email, direccion = direccion, activo = true,
+                        nit = nit, convenio = convenio,
+                        created_at = null, updated_at = null
+                    )
+                )
+                uiState = uiState.copy(isCreating = false, successMessage = if (response.isSuccessful) "Proveedor actualizado" else "Error al actualizar")
+                load()
+            } catch (e: Exception) {
+                uiState = uiState.copy(isCreating = false, error = e.message)
+            }
+        }
+    }
+
+    fun delete(id: Int) {
+        viewModelScope.launch {
+            try {
+                transactionApi.deleteProveedor(id)
+                load()
+            } catch (e: Exception) {
+                uiState = uiState.copy(error = e.message)
             }
         }
     }

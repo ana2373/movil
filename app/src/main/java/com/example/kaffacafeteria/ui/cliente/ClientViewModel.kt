@@ -70,10 +70,10 @@ class ClientViewModel(application: Application) : AndroidViewModel(application) 
                 }
             } catch (_: Exception) {}
             try {
-                val mpResponse = catalogApi.getMediosPago()
+                val mpResponse = catalogApi.getMediosPago(perPage = 100)
                 if (mpResponse.isSuccessful) {
                     uiState = uiState.copy(
-                        mediosPago = (mpResponse.body() ?: emptyList()).map {
+                        mediosPago = (mpResponse.body()?.data ?: emptyList()).map {
                             MedioPago(it.id, it.nombre, it.esVirtual, it.activo)
                         }
                     )

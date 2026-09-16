@@ -50,9 +50,9 @@ class CatalogRepositoryImpl(
 
     override suspend fun getMediosPago(): Resource<List<MedioPago>> {
         return try {
-            val response = catalogApi.getMediosPago()
+            val response = catalogApi.getMediosPago(perPage = 100)
             if (response.isSuccessful) {
-                Resource.Success(response.body()?.map {
+                Resource.Success(response.body()?.data?.map {
                     MedioPago(it.id, it.nombre, it.esVirtual, it.activo)
                 } ?: emptyList())
             } else {

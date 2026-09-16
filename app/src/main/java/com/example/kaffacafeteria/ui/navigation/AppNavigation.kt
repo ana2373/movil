@@ -7,27 +7,19 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
-<<<<<<< HEAD
 import androidx.compose.material.icons.filled.Chat
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.List
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.ShoppingCart
-<<<<<<< HEAD
 import androidx.compose.material.icons.outlined.Chat
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
-<<<<<<< HEAD
 import androidx.navigation.NavGraph.Companion.findStartDestination
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -36,7 +28,6 @@ import androidx.navigation.navArgument
 import com.example.kaffacafeteria.ui.admin.*
 import com.example.kaffacafeteria.ui.auth.LoginScreen
 import com.example.kaffacafeteria.ui.auth.RegisterScreen
-<<<<<<< HEAD
 import com.example.kaffacafeteria.ui.barista.BaristaPanelScreen
 import com.example.kaffacafeteria.ui.barista.CashRegisterScreen
 import com.example.kaffacafeteria.ui.chat.ChatScreen
@@ -47,11 +38,6 @@ import com.example.kaffacafeteria.ui.gestion.InsumosScreen
 import com.example.kaffacafeteria.ui.gestion.MermasScreen
 import com.example.kaffacafeteria.ui.gestion.ProveedoresScreen
 import com.example.kaffacafeteria.ui.gestion.TurnosScreen
-=======
-import com.example.kaffacafeteria.ui.barista.CashRegisterScreen
-import com.example.kaffacafeteria.ui.gestion.ComprasScreen
-import com.example.kaffacafeteria.ui.gestion.MermasScreen
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 import com.example.kaffacafeteria.ui.components.KaffaBottomBar
 import com.example.kaffacafeteria.ui.components.NavItem
 import com.example.kaffacafeteria.ui.home.HomeScreen
@@ -65,14 +51,10 @@ import com.example.kaffacafeteria.ui.splash.SplashScreen
 sealed class Screen(val route: String) {
     data object Splash : Screen("splash")
     data object Home : Screen("home")
-<<<<<<< HEAD
     data object ClientHome : Screen("client_home")
     data object BaristaHome : Screen("barista_home")
     data object Profile : Screen("profile")
     data object Chat : Screen("chat")
-=======
-    data object Profile : Screen("profile")
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
     data object Login : Screen("login")
     data object Register : Screen("register")
     data object POS : Screen("pos")
@@ -87,16 +69,17 @@ sealed class Screen(val route: String) {
     data object ManageProducts : Screen("admin/products")
     data object PaymentMethods : Screen("admin/payment_methods")
     data object Reports : Screen("admin/reports")
+    data object ReportDetail : Screen("admin/reports/{tipo}") {
+        fun createRoute(tipo: String) = "admin/reports/$tipo"
+    }
     data object Caja : Screen("caja")
     data object Compras : Screen("compras")
     data object Mermas : Screen("mermas")
-<<<<<<< HEAD
     data object Gastos : Screen("admin/gastos")
     data object Insumos : Screen("admin/insumos")
     data object Proveedores : Screen("admin/proveedores")
     data object Turnos : Screen("admin/turnos")
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
+    data object Promociones : Screen("admin/promociones")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -108,9 +91,9 @@ fun AppNavigation(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val cartStore = (LocalContext.current.applicationContext as com.example.kaffacafeteria.KaffaApp).container.cartStore
 
     var isLoggedIn by remember { mutableStateOf(false) }
-<<<<<<< HEAD
     var currentRole by remember { mutableStateOf<String?>(null) }
 
     val clientBottomNavItems = remember {
@@ -124,20 +107,6 @@ fun AppNavigation(
     }
 
     val showBottomBar = currentRole != "admin" && currentRole != "barista" && currentRoute in clientBottomNavItems.map { it.route }
-=======
-
-    val bottomNavItems = remember {
-        listOf(
-            NavItem("Inicio", Screen.Home.route, Icons.Filled.Home, Icons.Outlined.Home),
-            NavItem("Pedidos", Screen.Orders.route, Icons.Filled.List, Icons.Outlined.List),
-            NavItem("POS", Screen.POS.route, Icons.Filled.ShoppingCart, Icons.Outlined.ShoppingCart),
-            NavItem("Productos", Screen.Productos.route, Icons.Filled.Search, Icons.Outlined.Search),
-            NavItem("Perfil", Screen.Profile.route, Icons.Filled.Person, Icons.Outlined.Person)
-        )
-    }
-
-    val showBottomBar = currentRoute in bottomNavItems.map { it.route }
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 
     fun requireAuth(action: () -> Unit) {
         if (isLoggedIn) action() else navController.navigate(Screen.Login.route)
@@ -147,7 +116,6 @@ fun AppNavigation(
         bottomBar = {
             if (showBottomBar) {
                 KaffaBottomBar(
-<<<<<<< HEAD
                     items = clientBottomNavItems,
                     currentRoute = currentRoute,
                     onItemClick = { route ->
@@ -155,35 +123,15 @@ fun AppNavigation(
                             val navigate = {
                                 navController.navigate(route) {
                                     popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-=======
-                    items = bottomNavItems,
-                    currentRoute = currentRoute,
-                    onItemClick = { route ->
-                        if (route != currentRoute) {
-                            if (route in setOf(Screen.Orders.route, Screen.POS.route, Screen.Profile.route)) {
-                                requireAuth {
-                                    navController.navigate(route) {
-                                        popUpTo(Screen.Home.route) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
-                            } else {
-                                navController.navigate(route) {
-                                    popUpTo(Screen.Home.route) { saveState = true }
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                                     launchSingleTop = true
                                     restoreState = true
                                 }
                             }
-<<<<<<< HEAD
                             if (route in setOf(Screen.Orders.route, Screen.POS.route, Screen.Chat.route)) {
                                 requireAuth(navigate)
                             } else {
                                 navigate()
                             }
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                         }
                     }
                 )
@@ -194,25 +142,18 @@ fun AppNavigation(
             navController = navController,
             startDestination = Screen.Splash.route,
             modifier = Modifier.padding(innerPadding)
-<<<<<<< HEAD
-        ) {            composable(Screen.Splash.route) {
+        ) {
+            composable(Screen.Splash.route) {
                 SplashScreen(
                     onContinue = { user ->
                         currentRole = user?.roles?.firstOrNull()?.nombre ?: user?.let { if (it.isCliente) "cliente" else if (it.isBarista) "barista" else if (it.isAdmin) "admin" else null }
                         val route = homeRouteFor(user)
                         navController.navigate(route) { popUpTo(Screen.Splash.route) { inclusive = true } }
                     },
-=======
-        ) {
-            composable(Screen.Splash.route) {
-                SplashScreen(
-                    onContinue = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Splash.route) { inclusive = true } } },
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                     onSessionState = { isLoggedIn = it }
                 )
             }
 
-<<<<<<< HEAD
             composable(Screen.ClientHome.route) {
                 ClientScreen(
                     onViewMyOrders = { requireAuth { navController.navigate(Screen.Orders.route) } }
@@ -222,10 +163,9 @@ fun AppNavigation(
             composable(Screen.BaristaHome.route) {
                 BaristaPanelScreen(
                     onBack = {},
-                    onNavigateToPOS = { requireAuth { navController.navigate(Screen.POS.route) } },
-                    onNavigateToCaja = { requireAuth { navController.navigate(Screen.Caja.route) } },
                     onNavigateToInsumos = { requireAuth { navController.navigate(Screen.Insumos.route) } },
                     onNavigateToChat = { requireAuth { navController.navigate(Screen.Chat.route) } },
+                    onNavigateToCaja = { requireAuth { navController.navigate(Screen.Caja.route) } },
                     onExportHistorial = { requireAuth { navController.navigate(Screen.Orders.route) } },
                     onNavigateToProfile = { requireAuth { navController.navigate(Screen.Profile.route) } },
                     onLogout = {
@@ -243,13 +183,6 @@ fun AppNavigation(
                         currentRole = user?.roles?.firstOrNull()?.nombre
                         val route = homeRouteFor(user)
                         navController.navigate(route) { popUpTo(Screen.Login.route) { inclusive = true } }
-=======
-            composable(Screen.Login.route) {
-                LoginScreen(
-                    onLoginSuccess = {
-                        isLoggedIn = true
-                        navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } }
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                     },
                     onNavigateToRegister = { navController.navigate(Screen.Register.route) }
                 )
@@ -258,15 +191,11 @@ fun AppNavigation(
             composable(Screen.Register.route) {
                 RegisterScreen(
                     onBack = { navController.popBackStack() },
-<<<<<<< HEAD
                     onRegisterSuccess = {
                         isLoggedIn = true
                         currentRole = "cliente"
                         navController.navigate(Screen.Home.route) { popUpTo(0) { inclusive = true } }
                     }
-=======
-                    onRegisterSuccess = { navController.navigate(Screen.Login.route) { popUpTo(Screen.Register.route) { inclusive = true } } }
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                 )
             }
 
@@ -274,12 +203,17 @@ fun AppNavigation(
                 HomeScreen(
                     onNavigateToOrders = { requireAuth { navController.navigate(Screen.Orders.route) } },
                     onNavigateToPOS = { requireAuth { navController.navigate(Screen.POS.route) } },
+                    onBuyProduct = { product ->
+                        requireAuth {
+                            cartStore.add(product)
+                            navController.navigate(Screen.POS.route)
+                        }
+                    },
                     onNavigateToProfile = { requireAuth { navController.navigate(Screen.Profile.route) } },
                     onNavigateToAdminPanel = { requireAuth { navController.navigate(Screen.AdminPanel.route) } },
                     onNavigateToCaja = { requireAuth { navController.navigate(Screen.Caja.route) } },
                     onNavigateToCompras = { requireAuth { navController.navigate(Screen.Compras.route) } },
                     onNavigateToProductos = { navController.navigate(Screen.Productos.route) },
-<<<<<<< HEAD
                     onNavigateToGastos = { requireAuth { navController.navigate(Screen.Gastos.route) } },
                     onNavigateToMermas = { requireAuth { navController.navigate(Screen.Mermas.route) } },
                     onNavigateToLogin = { navController.navigate(Screen.Login.route) },
@@ -288,14 +222,6 @@ fun AppNavigation(
                         isLoggedIn = false
                         currentRole = null
                         navController.navigate(Screen.Home.route) { popUpTo(0) { inclusive = true } }
-=======
-                    onNavigateToGastos = { requireAuth { navController.navigate(Screen.Compras.route) } },
-                    onNavigateToMermas = { requireAuth { navController.navigate(Screen.Mermas.route) } },
-                    onNavigateToLogin = { navController.navigate(Screen.Login.route) },
-                    onLogout = {
-                        isLoggedIn = false
-                        navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                     }
                 )
             }
@@ -305,12 +231,8 @@ fun AppNavigation(
                     onBack = { navController.popBackStack() },
                     onLogout = {
                         isLoggedIn = false
-<<<<<<< HEAD
                         currentRole = null
                         navController.navigate(Screen.Home.route) { popUpTo(0) { inclusive = true } }
-=======
-                        navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                     },
                     darkTheme = darkTheme,
                     onToggleTheme = onToggleTheme
@@ -318,10 +240,7 @@ fun AppNavigation(
             }
 
             composable(Screen.POS.route) { POSScreen(onBack = { navController.popBackStack() }) }
-<<<<<<< HEAD
             composable(Screen.Chat.route) { ChatScreen(onBack = { navController.popBackStack() }) }
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
             composable(Screen.Orders.route) {
                 OrderListScreen(
                     onBack = { navController.popBackStack() },
@@ -339,8 +258,11 @@ fun AppNavigation(
             composable(Screen.Productos.route) {
                 ProductListScreen(
                     onBack = { navController.popBackStack() },
-                    onBuy = {
-                        requireAuth { navController.navigate(Screen.POS.route) }
+                    onBuy = { product ->
+                        requireAuth {
+                            cartStore.add(product)
+                            navController.navigate(Screen.POS.route)
+                        }
                     }
                 )
             }
@@ -351,7 +273,6 @@ fun AppNavigation(
                     onNavigateToCategories = { navController.navigate(Screen.Categories.route) },
                     onNavigateToProducts = { navController.navigate(Screen.ManageProducts.route) },
                     onNavigateToPaymentMethods = { navController.navigate(Screen.PaymentMethods.route) },
-<<<<<<< HEAD
                     onNavigateToReports = { navController.navigate(Screen.Reports.route) },
                     onNavigateToOrders = { navController.navigate(Screen.Orders.route) },
                     onNavigateToInsumos = { navController.navigate(Screen.Insumos.route) },
@@ -361,30 +282,39 @@ fun AppNavigation(
                     onNavigateToGastos = { navController.navigate(Screen.Gastos.route) },
                     onNavigateToCaja = { navController.navigate(Screen.Caja.route) },
                     onNavigateToTurnos = { navController.navigate(Screen.Turnos.route) },
+                    onNavigateToPromociones = { navController.navigate(Screen.Promociones.route) },
                     onNavigateToProfile = { requireAuth { navController.navigate(Screen.Profile.route) } },
                     onLogout = {
                         isLoggedIn = false
                         currentRole = null
                         navController.navigate(Screen.Home.route) { popUpTo(0) { inclusive = true } }
                     }
-=======
-                    onNavigateToReports = { navController.navigate(Screen.Reports.route) }
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                 )
             }
             composable(Screen.Users.route) { UsersScreen(onBack = { navController.popBackStack() }) }
             composable(Screen.Categories.route) { CategoriesScreen(onBack = { navController.popBackStack() }) }
             composable(Screen.ManageProducts.route) { ManageProductsScreen(onBack = { navController.popBackStack() }) }
             composable(Screen.PaymentMethods.route) { PaymentMethodsScreen(onBack = { navController.popBackStack() }) }
-            composable(Screen.Reports.route) { ReportsScreen(onBack = { navController.popBackStack() }) }
+            composable(Screen.Reports.route) {
+                ReportsScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenReport = { tipo -> navController.navigate(Screen.ReportDetail.createRoute(tipo)) }
+                )
+            }
+            composable(Screen.ReportDetail.route, arguments = listOf(navArgument("tipo") { type = NavType.StringType })) { backStackEntry ->
+                ReportDetailScreen(
+                    tipo = backStackEntry.arguments?.getString("tipo") ?: "diario",
+                    onBack = { navController.popBackStack() }
+                )
+            }
             composable(Screen.Caja.route) { CashRegisterScreen(onBack = { navController.popBackStack() }) }
             composable(Screen.Compras.route) { ComprasScreen(onBack = { navController.popBackStack() }) }
             composable(Screen.Mermas.route) { MermasScreen(onBack = { navController.popBackStack() }) }
-<<<<<<< HEAD
-            composable(Screen.Gastos.route) { GastosScreen(onBack = { navController.popBackStack() }) }
-            composable(Screen.Insumos.route) { InsumosScreen(onBack = { navController.popBackStack() }) }
+composable(Screen.Gastos.route) { GastosScreen(onBack = { navController.popBackStack() }) }
+            composable(Screen.Insumos.route) { InsumosScreen(onBack = { navController.popBackStack() }, isAdmin = currentRole == "admin") }
             composable(Screen.Proveedores.route) { ProveedoresScreen(onBack = { navController.popBackStack() }) }
             composable(Screen.Turnos.route) { TurnosScreen(onBack = { navController.popBackStack() }) }
+            composable(Screen.Promociones.route) { PromocionesScreen(onBack = { navController.popBackStack() }) }
         }
     }
 }
@@ -397,8 +327,3 @@ private fun homeRouteFor(user: com.example.kaffacafeteria.domain.model.User?): S
         else -> Screen.Home.route
     }
 }
-=======
-        }
-    }
-}
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855

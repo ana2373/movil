@@ -1,6 +1,7 @@
 package com.example.kaffacafeteria
 
 import android.app.Application
+import com.example.kaffacafeteria.data.local.CartStore
 import com.example.kaffacafeteria.data.local.TokenManager
 import com.example.kaffacafeteria.data.remote.api.*
 import com.example.kaffacafeteria.data.remote.interceptor.AuthInterceptor
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit
 
 class AppContainer(context: Application) {
     val tokenManager = TokenManager(context)
+    val cartStore = CartStore()
 
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(AuthInterceptor(tokenManager))
@@ -41,10 +43,8 @@ class AppContainer(context: Application) {
     val userApi: UserApi = retrofit.create(UserApi::class.java)
     val transactionApi: TransactionApi = retrofit.create(TransactionApi::class.java)
     val dashboardApi: DashboardApi = retrofit.create(DashboardApi::class.java)
-<<<<<<< HEAD
-    val mensajeApi: MensajeApi = retrofit.create(MensajeApi::class.java)
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
+    val turnoApi: TurnoApi = retrofit.create(TurnoApi::class.java)
+val mensajeApi: MensajeApi = retrofit.create(MensajeApi::class.java)
 
     val authRepository: AuthRepository = AuthRepositoryImpl(authApi, tokenManager)
     val catalogRepository: CatalogRepository = CatalogRepositoryImpl(catalogApi)

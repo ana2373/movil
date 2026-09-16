@@ -97,11 +97,8 @@ fun CreateUserDialog(
     var password by remember { mutableStateOf("") }
     var selectedRoleIds by remember { mutableStateOf(setOf<Int>()) }
 
-<<<<<<< HEAD
     val rolesGestionables = roles.filter { it.nombre.lowercase() != "cliente" }
 
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Crear Usuario", fontWeight = FontWeight.Bold) },
@@ -110,13 +107,8 @@ fun CreateUserDialog(
                 OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant))
                 OutlinedTextField(value = correo, onValueChange = { correo = it }, label = { Text("Correo") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant))
                 OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Contraseña") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant))
-<<<<<<< HEAD
                 Text("Rol (los clientes se registran por su cuenta):", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                 rolesGestionables.forEach { role ->
-=======
-                Text("Roles:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                roles.forEach { role ->
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = selectedRoleIds.contains(role.id), onCheckedChange = { checked -> selectedRoleIds = if (checked) selectedRoleIds + role.id else selectedRoleIds - role.id }, colors = CheckboxDefaults.colors(checkedColor = colorScheme.primary))
                         Text(role.nombre)

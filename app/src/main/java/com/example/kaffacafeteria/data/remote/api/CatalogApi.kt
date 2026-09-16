@@ -58,12 +58,28 @@ interface CatalogApi {
     @GET("insumos/{id}")
     suspend fun getInsumo(@Path("id") id: Int): Response<InsumoDto>
 
+    @POST("insumos")
+    suspend fun createInsumo(@Body request: InsumoRequest): Response<InsumoDto>
+
+    @PUT("insumos/{id}")
+    suspend fun updateInsumo(@Path("id") id: Int, @Body request: InsumoRequest): Response<InsumoDto>
+
+    @DELETE("insumos/{id}")
+    suspend fun deleteInsumo(@Path("id") id: Int): Response<Any>
+
+    // Recetas (insumos de un producto)
+    @POST("productos/{id}/insumos")
+    suspend fun addInsumoToProducto(@Path("id") productoId: Int, @Body request: RecetaRequest): Response<RecetaDto>
+
+    @DELETE("recetas/{id}")
+    suspend fun deleteReceta(@Path("id") id: Int): Response<Any>
+
+    @GET("productos/{id}/insumos")
+    suspend fun getInsumosProducto(@Path("id") productoId: Int): Response<PaginatedResponse<RecetaDto>>
+
     // Medios de Pago
     @GET("medios-pago")
-    suspend fun getMediosPago(): Response<List<MedioPagoDto>>
-
-    @GET("medios-pago")
-    suspend fun getMediosPagoPaginated(
+    suspend fun getMediosPago(
         @Query("per_page") perPage: Int? = null
     ): Response<PaginatedResponse<MedioPagoDto>>
 

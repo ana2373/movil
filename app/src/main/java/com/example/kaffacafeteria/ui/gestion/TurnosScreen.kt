@@ -1,9 +1,9 @@
 package com.example.kaffacafeteria.ui.gestion
 
+import android.app.DatePickerDialog
 import androidx.compose.foundation.background
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -13,14 +13,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.kaffacafeteria.ui.theme.*
 import com.example.kaffacafeteria.util.createViewModel
-
-data class Turno(val barista: String, val turno: String, val horario: String)
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,97 +30,177 @@ fun TurnosScreen(
 ) {
     val state = viewModel.uiState
     val colorScheme = MaterialTheme.colorScheme
+    val context = LocalContext.current
     var showCreateDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Column(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
-        TopAppBar(
-            title = { Text("Turnos Laborales") },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = colorScheme.onPrimary) } },
-            actions = { IconButton(onClick = { showCreateDialog = true }) { Icon(Icons.Default.Add, contentDescription = "Agregar turno", tint = colorScheme.onPrimary) } },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary, titleContentColor = colorScheme.onPrimary)
-        )
+    LaunchedEffect(Unit) {
+        viewModel.loadTurnos()
+        viewModel.loadBaristas()
+    }
 
-        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = CoffeeBrown.copy(alpha = 0.12f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Schedule, contentDescription = null, tint = CoffeeBrown, modifier = Modifier.size(32.dp))
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("La gestión de turnos se guarda de forma local. Asigna horarios a tus baristas del día.", style = MaterialTheme.typography.bodySmall, color = CoffeeBrown)
-                }
-            }
+    LaunchedEffect(state.successMessage) {
+        if (state.successMessage != null) {
+            snackbarHostState.showSnackbar(state.successMessage!!)
+            viewModel.clearMessages()
+        }
+    }
 
-            if (state.turnos.isEmpty()) {
-                Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = colorScheme.surface), modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.Schedule, contentDescription = null, tint = colorScheme.onSurfaceVariant, modifier = Modifier.size(48.dp))
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("No hay turnos asignados", style = MaterialTheme.typography.bodyMedium, color = colorScheme.onSurfaceVariant)
-                        Text("Pulsa + para registrar un turno", style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
+    LaunchedEffect(state.error) {
+        if (state.error != null) {
+            snackbarHostState.showSnackbar(state.error!!)
+            viewModel.clearMessages()
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            TopAppBar(
+                title = { Text("Turnos Laborales") },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = colorScheme.onPrimary) } },
+                actions = { IconButton(onClick = { showCreateDialog = true }) { Icon(Icons.Default.Add, contentDescription = "Agregar turno", tint = colorScheme.onPrimary) } },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary, titleContentColor = colorScheme.onPrimary)
+            )
+
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = ink(CoffeeBrown).copy(alpha = 0.12f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Schedule, contentDescription = null, tint = ink(CoffeeBrown), modifier = Modifier.size(32.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Asigna turnos (mañana o tarde) a tus baristas. Los pedidos requieren que el barista tenga un turno activo.", style = MaterialTheme.typography.bodySmall, color = ink(CoffeeBrown))
                     }
                 }
-            } else {
-                state.turnos.forEach { turno ->
-                    Card(shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
-                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Surface(shape = RoundedCornerShape(12.dp), color = when (turno.turno) {
-                                "Mañana" -> Terracotta
-                                "Tarde" -> PrimaryGreen
-                                else -> Color(0xFF2563EB)
-                            }.copy(alpha = 0.15f), modifier = Modifier.size(44.dp)) {
-                                Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Person, contentDescription = null, tint = when (turno.turno) { "Mañana" -> Terracotta; "Tarde" -> PrimaryGreen; else -> Color(0xFF2563EB) }) }
+
+                when {
+                    state.isLoading && state.turnos.isEmpty() -> Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = colorScheme.primary) }
+                    state.turnos.isEmpty() -> Text("No hay turnos asignados", style = MaterialTheme.typography.bodyMedium, color = colorScheme.onSurfaceVariant, modifier = Modifier.padding(24.dp))
+                    else -> state.turnos.forEach { turno ->
+                        val esManana = turno.tipo.lowercase().startsWith("ma")
+                        Card(shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+                            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Surface(shape = RoundedCornerShape(12.dp), color = ink(if (esManana) Terracotta else PrimaryGreen).copy(alpha = 0.15f), modifier = Modifier.size(44.dp)) {
+                                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Person, contentDescription = null, tint = ink(if (esManana) Terracotta else PrimaryGreen)) }
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(formatFechaTurno(turno.fecha), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                    Text("${turno.tipo.replaceFirstChar { it.uppercase() }} · ${horarioDe(turno.tipo)}", style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
+                                    val nombres = turno.baristas?.joinToString { it.nombre }?.takeIf { it.isNotBlank() } ?: "Sin barista"
+                                    Text(nombres, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
+                                }
+                                TextButton(onClick = { viewModel.deleteTurno(turno.id) }) { Text("Quitar", color = MaterialTheme.colorScheme.error) }
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(turno.barista, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                                Text("${turno.turno} · ${turno.horario}", style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
-                            }
-                            TextButton(onClick = { viewModel.remove(turno) }) { Text("Quitar", color = MaterialTheme.colorScheme.error) }
                         }
                     }
                 }
             }
         }
+
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
     }
 
     if (showCreateDialog) {
-        var barista by remember { mutableStateOf("") }
-        var turno by remember { mutableStateOf("Mañana") }
-        var horario by remember { mutableStateOf("") }
+        var selectedFecha by remember { mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Calendar.getInstance().time)) }
+        var tipo by remember { mutableStateOf("mañana") }
+        val selectedIds = remember { mutableStateListOf<Int>() }
+
         AlertDialog(
             onDismissRequest = { showCreateDialog = false },
             title = { Text("Registrar Turno", fontWeight = FontWeight.Bold) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(value = barista, onValueChange = { barista = it }, label = { Text("Barista") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant))
-                    OutlinedTextField(value = horario, onValueChange = { horario = it }, label = { Text("Horario (ej. 7:00 - 15:00)") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant))
+                Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    val fechaLabel = runCatching {
+                        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(
+                            SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(selectedFecha)!!
+                        )
+                    }.getOrDefault(selectedFecha)
+                    OutlinedTextField(
+                        value = fechaLabel,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Fecha") },
+                        trailingIcon = { Icon(Icons.Default.CalendarMonth, contentDescription = null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant)
+                    )
+                    TextButton(onClick = {
+                        val cal = Calendar.getInstance()
+                        runCatching { cal.time = SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(selectedFecha)!! }
+                        DatePickerDialog(
+                            context,
+                            { _, year, month, day ->
+                                val c = Calendar.getInstance().apply { set(year, month, day) }
+                                selectedFecha = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(c.time)
+                            },
+                            cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)
+                        ).show()
+                    }) { Text("Elegir fecha") }
+
                     Column {
                         Text("Turno:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                         Row {
-                            listOf("Mañana", "Tarde", "Noche").forEach { t ->
+                            listOf("mañana" to "Mañana", "tarde" to "Tarde").forEach { (valor, etiqueta) ->
                                 FilterChip(
-                                    selected = turno == t,
-                                    onClick = { turno = t },
-                                    label = { Text(t) },
+                                    selected = tipo == valor,
+                                    onClick = { tipo = valor },
+                                    label = { Text(etiqueta) },
                                     modifier = Modifier.padding(end = 8.dp),
                                     colors = FilterChipDefaults.filterChipColors(selectedContainerColor = colorScheme.secondary, selectedLabelColor = colorScheme.onSecondary)
                                 )
                             }
                         }
                     }
+
+                    Column {
+                        Text("Baristas:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                        if (state.baristas.isEmpty()) {
+                            Text("No hay baristas registrados. Crea uno desde el panel de administración.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                        } else {
+                            state.baristas.forEach { b ->
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                                    Checkbox(
+                                        checked = selectedIds.contains(b.id),
+                                        onCheckedChange = { checked ->
+                                            if (checked) { if (!selectedIds.contains(b.id)) selectedIds.add(b.id) }
+                                            else selectedIds.remove(b.id)
+                                        },
+                                        colors = CheckboxDefaults.colors(checkedColor = colorScheme.primary)
+                                    )
+                                    Text(b.nombre)
+                                }
+                            }
+                        }
+                    }
                 }
             },
             confirmButton = {
-                Button(onClick = { viewModel.add(Turno(barista = barista.trim(), turno = turno, horario = horario.ifBlank { "-" })); showCreateDialog = false },
-                    enabled = barista.isNotBlank(),
-                    colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary, contentColor = colorScheme.onSecondary)) {
-                    Text("Guardar", color = colorScheme.onSecondary)
-                }
+                Button(
+                    onClick = {
+                        viewModel.createTurno(selectedFecha, tipo, selectedIds.toList())
+                        showCreateDialog = false
+                    },
+                    enabled = selectedIds.isNotEmpty() && !state.isLoading,
+                    colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary, contentColor = colorScheme.onSecondary)
+                ) { Text("Guardar", color = colorScheme.onSecondary) }
             },
             dismissButton = { TextButton(onClick = { showCreateDialog = false }) { Text("Cancelar") } }
         )
     }
+}
+
+private fun horarioDe(tipo: String): String =
+    if (tipo.lowercase().startsWith("ma")) "07:00 - 13:00" else "13:00 - 18:00"
+
+private fun formatFechaTurno(raw: String?): String {
+    if (raw.isNullOrBlank()) return "-"
+    val datePart = raw.substringBefore('T')
+    return runCatching {
+        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(datePart)!!
+        )
+    }.getOrDefault(datePart)
 }

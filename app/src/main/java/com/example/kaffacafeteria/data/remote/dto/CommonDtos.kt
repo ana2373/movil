@@ -51,10 +51,22 @@ data class InsumoDto(
     val id: Int,
     val nombre: String,
     val stock_actual: String?,
+    @SerializedName("stock_minimo") val stock_minimo: String? = null,
     val unidad_medida: String?,
     val activo: Boolean?,
     val created_at: String?,
     val updated_at: String?
+)
+
+data class InsumoRequest(
+    val nombre: String,
+    @SerializedName("stock_actual") val stockActual: Double? = null,
+    @SerializedName("unidad_medida") val unidadMedida: String? = null
+)
+
+data class RecetaRequest(
+    @SerializedName("insumo_id") val insumoId: Int,
+    val cantidad: Double
 )
 
 data class RecetaDto(

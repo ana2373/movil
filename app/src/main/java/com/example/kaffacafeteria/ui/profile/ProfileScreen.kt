@@ -1,15 +1,11 @@
 package com.example.kaffacafeteria.ui.profile
 
-<<<<<<< HEAD
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-=======
-import androidx.compose.foundation.background
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -20,7 +16,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-<<<<<<< HEAD
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -33,12 +28,6 @@ import com.example.kaffacafeteria.util.createViewModel
 import com.example.kaffacafeteria.util.toImageUrl
 import java.io.File
 import java.io.FileOutputStream
-=======
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import com.example.kaffacafeteria.ui.theme.*
-import com.example.kaffacafeteria.util.createViewModel
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,7 +41,6 @@ fun ProfileScreen(
     val state = viewModel.uiState
     val colorScheme = MaterialTheme.colorScheme
     var showLogoutDialog by remember { mutableStateOf(false) }
-<<<<<<< HEAD
     var newPasswordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -67,8 +55,6 @@ fun ProfileScreen(
             viewModel.clearMessages()
         }
     }
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 
     if (showLogoutDialog) {
         AlertDialog(
@@ -88,7 +74,6 @@ fun ProfileScreen(
         )
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(modifier = Modifier.height(24.dp))
-<<<<<<< HEAD
             Box {
                 Surface(modifier = Modifier.size(96.dp), shape = CircleShape, color = colorScheme.primaryContainer) {
                     val fotoUrl = state.user?.foto?.toImageUrl()
@@ -115,17 +100,12 @@ fun ProfileScreen(
                         }
                     }
                 }
-=======
-            Surface(modifier = Modifier.size(96.dp), shape = CircleShape, color = colorScheme.primaryContainer) {
-                Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(48.dp), tint = colorScheme.primary) }
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
             }
             Spacer(modifier = Modifier.height(16.dp))
             Text(state.user?.nombre ?: "Invitado", style = MaterialTheme.typography.headlineMedium, color = colorScheme.primary, fontWeight = FontWeight.Bold)
             Text(state.user?.correo ?: "", style = MaterialTheme.typography.bodyLarge, color = colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(24.dp))
 
-<<<<<<< HEAD
             if (state.successMessage != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(state.successMessage, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
@@ -135,8 +115,6 @@ fun ProfileScreen(
                 Text(state.errorMessage, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
             }
 
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
             if (state.user == null) {
                 Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = colorScheme.surface)) {
                     Column(modifier = Modifier.padding(20.dp)) {
@@ -148,7 +126,6 @@ fun ProfileScreen(
             } else {
                 Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = colorScheme.surface)) {
                     Column(modifier = Modifier.padding(20.dp)) {
-<<<<<<< HEAD
                         Text("Información de la Cuenta", style = MaterialTheme.typography.titleMedium, color = colorScheme.primary, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(12.dp))
                         ProfileInfoRow("ID", state.user?.id?.toString() ?: "", colorScheme)
@@ -238,28 +215,6 @@ fun ProfileScreen(
                         }
                     }
                 }
-=======
-                        Text("Roles Asignados", style = MaterialTheme.typography.titleMedium, color = colorScheme.primary, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        state.user?.roles?.forEach { role ->
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = when (role.nombre) { "admin" -> colorScheme.primary; "barista" -> colorScheme.tertiary; else -> colorScheme.secondary }, modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(role.nombre.replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.bodyLarge)
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-                Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = colorScheme.surface)) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text("Información de la Cuenta", style = MaterialTheme.typography.titleMedium, color = colorScheme.primary, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        ProfileInfoRow("ID", state.user?.id?.toString() ?: "", colorScheme)
-                        ProfileInfoRow("Estado", if (state.user?.activo == true) "Activo" else "Inactivo", colorScheme)
-                    }
-                }
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -288,7 +243,6 @@ fun ProfileScreen(
     }
 }
 
-<<<<<<< HEAD
 private fun roleLabel(user: com.example.kaffacafeteria.domain.model.User?): String {
     if (user == null) return ""
     return when {
@@ -298,8 +252,6 @@ private fun roleLabel(user: com.example.kaffacafeteria.domain.model.User?): Stri
     }
 }
 
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 @Composable
 fun ProfileInfoRow(label: String, value: String, colorScheme: androidx.compose.material3.ColorScheme) {
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -307,7 +259,6 @@ fun ProfileInfoRow(label: String, value: String, colorScheme: androidx.compose.m
         Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
     }
 }
-<<<<<<< HEAD
 
 private fun copyToCacheAndUpload(uri: Uri, context: android.content.Context, viewModel: ProfileViewModel) {
     try {
@@ -321,5 +272,3 @@ private fun copyToCacheAndUpload(uri: Uri, context: android.content.Context, vie
         viewModel.updateError(e.message ?: "No se pudo cargar la imagen")
     }
 }
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855

@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kaffacafeteria.KaffaApp
+import com.example.kaffacafeteria.data.local.CartItem
 import com.example.kaffacafeteria.data.remote.api.CatalogApi
 import com.example.kaffacafeteria.data.remote.api.OrderApi
 import com.example.kaffacafeteria.data.remote.dto.*
@@ -15,19 +16,11 @@ import com.example.kaffacafeteria.domain.model.User
 import com.example.kaffacafeteria.util.Resource
 import kotlinx.coroutines.launch
 
-data class CartItem(
-    val producto: ProductoDto,
-    val cantidad: Int = 1
-) {
-    val subtotal: Double get() = (producto.precioVenta.toDoubleOrNull() ?: 0.0) * cantidad
-}
-
 data class POSUiState(
     val user: User? = null,
     val productos: List<ProductoDto> = emptyList(),
     val categorias: List<CategoriaDto> = emptyList(),
     val mediosPago: List<MedioPago> = emptyList(),
-    val cartItems: List<CartItem> = emptyList(),
     val selectedCategoria: Int? = null,
     val isLoading: Boolean = false,
     val isLoadingProductos: Boolean = false,
@@ -42,8 +35,6 @@ data class POSUiState(
     val currentPage: Int = 1,
     val lastPage: Int = 1
 ) {
-    val cartTotal: Double get() = cartItems.sumOf { it.subtotal }
-    val cartCount: Int get() = cartItems.size
     val filteredProductos: List<ProductoDto>
         get() = productos.filter { p ->
             (selectedCategoria == null || p.categoriaId == selectedCategoria) &&
@@ -55,9 +46,13 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     private val authRepository = (application as KaffaApp).container.authRepository
     private val catalogApi = (application as KaffaApp).container.catalogApi
     private val orderApi = (application as KaffaApp).container.orderApi
+    private val cartStore = (application as KaffaApp).container.cartStore
 
     var uiState by mutableStateOf(POSUiState())
         private set
+
+    val cartItems: List<CartItem> get() = cartStore.items
+    val cartTotal: Double get() = cartStore.total
 
     init {
         loadInitialData()
@@ -78,10 +73,10 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
                 }
             } catch (_: Exception) {}
             try {
-                val mpResponse = catalogApi.getMediosPago()
+                val mpResponse = catalogApi.getMediosPago(perPage = 100)
                 if (mpResponse.isSuccessful) {
                     uiState = uiState.copy(
-                        mediosPago = (mpResponse.body() ?: emptyList()).map {
+                        mediosPago = (mpResponse.body()?.data ?: emptyList()).map {
                             MedioPago(it.id, it.nombre, it.esVirtual, it.activo)
                         }
                     )
@@ -120,35 +115,20 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun addToCart(producto: ProductoDto) {
-        val existing = uiState.cartItems.indexOfFirst { it.producto.id == producto.id }
-        if (existing >= 0) {
-            val items = uiState.cartItems.toMutableList()
-            items[existing] = items[existing].copy(cantidad = items[existing].cantidad + 1)
-            uiState = uiState.copy(cartItems = items)
-        } else {
-            uiState = uiState.copy(cartItems = uiState.cartItems + CartItem(producto))
-        }
+        cartStore.add(producto)
     }
 
     fun updateCantidad(productoId: Int, cantidad: Int) {
-        if (cantidad <= 0) {
-            removeFromCart(productoId)
-            return
-        }
-        val items = uiState.cartItems.toMutableList()
-        val index = items.indexOfFirst { it.producto.id == productoId }
-        if (index >= 0) {
-            items[index] = items[index].copy(cantidad = cantidad)
-            uiState = uiState.copy(cartItems = items)
-        }
+        cartStore.updateCantidad(productoId, cantidad)
     }
 
     fun removeFromCart(productoId: Int) {
-        uiState = uiState.copy(cartItems = uiState.cartItems.filter { it.producto.id != productoId })
+        cartStore.remove(productoId)
     }
 
     fun clearCart() {
-        uiState = uiState.copy(cartItems = emptyList(), showPaymentDialog = false, showPaymentSuccess = false)
+        cartStore.clear()
+        uiState = uiState.copy(showPaymentDialog = false, showPaymentSuccess = false)
     }
 
     fun showPayment() {
@@ -168,16 +148,23 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun createOrder() {
-        val medioPagoId = uiState.selectedMedioPagoId ?: return
-        val medioPago = uiState.mediosPago.find { it.id == medioPagoId } ?: return
+        val medioPagoId = uiState.selectedMedioPagoId ?: run {
+            uiState = uiState.copy(error = "Selecciona un método de pago válido")
+            return
+        }
+        val medioPago = uiState.mediosPago.find { it.id == medioPagoId }
+        if (medioPago == null) {
+            uiState = uiState.copy(error = "Selecciona un método de pago válido")
+            return
+        }
 
         if (medioPago.esVirtual && uiState.comprobanteUrl.isBlank()) {
             uiState = uiState.copy(error = "El comprobante es requerido para pagos virtuales")
             return
         }
 
-        val total = uiState.cartTotal
-        val detalles = uiState.cartItems.map { item ->
+        val total = cartStore.total
+        val detalles = cartStore.items.map { item ->
             val precio = item.producto.precioVenta.toDoubleOrNull() ?: 0.0
             PedidoDetalleRequest(
                 productoId = item.producto.id,
@@ -221,9 +208,9 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
                         isLoading = false,
                         showPaymentDialog = false,
                         showPaymentSuccess = true,
-                        createdOrderId = order?.id,
-                        cartItems = emptyList()
+                        createdOrderId = order?.id
                     )
+                    cartStore.clear()
                 } else {
                     uiState = uiState.copy(isLoading = false, error = "Error al crear pedido: ${result.code()}")
                 }

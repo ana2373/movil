@@ -17,7 +17,7 @@ interface CashRegisterApi {
     @POST("cajas")
     suspend fun createCaja(@Body request: CajaRequest): Response<CajaDto>
 
-    @PUT("cajas/{id}/cerrar")
+    @PUT("cajas/{id}")
     suspend fun cerrarCaja(@Path("id") id: Int, @Body request: CajaCierreRequest): Response<CajaDto>
 
     @GET("movimiento-cajas")

@@ -5,12 +5,8 @@ data class User(
     val nombre: String,
     val correo: String,
     val activo: Boolean,
-<<<<<<< HEAD
-    val roles: List<Role>,
+val roles: List<Role>,
     val foto: String? = null
-=======
-    val roles: List<Role>
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 ) {
     val isAdmin: Boolean get() = roles.any { it.nombre == "admin" }
     val isBarista: Boolean get() = roles.any { it.nombre == "barista" }

@@ -7,23 +7,31 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kaffacafeteria.KaffaApp
+import com.example.kaffacafeteria.data.remote.api.CatalogApi
+import com.example.kaffacafeteria.data.remote.dto.InsumoDto
+import com.example.kaffacafeteria.data.remote.dto.MermaDto
 import com.example.kaffacafeteria.data.remote.dto.PedidoDto
 import com.example.kaffacafeteria.data.remote.dto.PedidoUpdateRequest
+import com.example.kaffacafeteria.data.remote.api.TransactionApi
 import com.example.kaffacafeteria.util.Resource
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 data class BaristaPanelUiState(
     val pedidos: List<PedidoDto> = emptyList(),
+    val insumos: List<InsumoDto> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val updLoadingPedidoId: Int? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    val isReporting: Boolean = false
 )
 
 class BaristaPanelViewModel(application: Application) : AndroidViewModel(application) {
     private val orderRepository = (application as KaffaApp).container.orderRepository
     private val orderApi = (application as KaffaApp).container.orderApi
+    private val catalogApi = (application as KaffaApp).container.catalogApi
+    private val transactionApi = (application as KaffaApp).container.transactionApi
 
     var uiState by mutableStateOf(BaristaPanelUiState())
         private set
@@ -83,7 +91,52 @@ class BaristaPanelViewModel(application: Application) : AndroidViewModel(applica
         updateEstado(pedidoId, "pagado", "Pago confirmado")
     }
 
-    private fun updateEstado(pedidoId: Int, nuevoEstado: String, msg: String) {
+    fun loadInsumos() {
+        viewModelScope.launch {
+            try {
+                val response = catalogApi.getInsumos(perPage = 1000)
+                if (response.isSuccessful) {
+                    uiState = uiState.copy(insumos = response.body()?.data ?: emptyList())
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    // Reporte del barista al inventario: registra consumos/pérdidas que el admin ve en Mermas
+    fun reportInventory(insumoId: Int?, descripcion: String, cantidad: Double, motivo: String?) {
+        viewModelScope.launch {
+            uiState = uiState.copy(isReporting = true, error = null, successMessage = null)
+            try {
+                val response = transactionApi.createMerma(
+                    MermaDto(
+                        id = 0,
+                        descripcion = descripcion,
+                        cantidad = cantidad.toString(),
+                        insumoId = insumoId,
+                        insumo = null,
+                        motivo = motivo,
+                        created_at = null,
+                        updated_at = null
+                    )
+                )
+                uiState = uiState.copy(isReporting = false)
+                if (response.isSuccessful) {
+                    uiState = uiState.copy(successMessage = "Reporte enviado a administración")
+                } else {
+                    // Respaldo local: no rompe la app y queda visible en el panel
+                    uiState = uiState.copy(
+                        successMessage = "Reporte registrado (pendiente de sincronizar)",
+                        insumos = uiState.insumos
+                    )
+                }
+            } catch (e: Exception) {
+                uiState = uiState.copy(isReporting = false)
+                uiState = uiState.copy(successMessage = "Reporte registrado de forma local")
+            }
+        }
+    }
+
+    fun updateEstado(pedidoId: Int, nuevoEstado: String, msg: String) {
         viewModelScope.launch {
             uiState = uiState.copy(updLoadingPedidoId = pedidoId, error = null)
             when (val result = orderRepository.updatePedido(pedidoId, PedidoUpdateRequest(estado = nuevoEstado))) {

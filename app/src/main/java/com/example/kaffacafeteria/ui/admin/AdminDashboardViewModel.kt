@@ -108,7 +108,7 @@ class AdminDashboardViewModel(application: Application) : AndroidViewModel(appli
         pedidos.forEach { p ->
             p.detalles?.forEach { d ->
                 val nombre = d.producto?.nombre ?: "Producto #${d.productoId}"
-                counts[nombre] = (counts[nombre] ?: 0) + (d.cantidad ?: 1)
+                counts[nombre] = (counts[nombre] ?: 0) + (d.cantidad?.toDoubleOrNull()?.toInt() ?: 1)
             }
         }
         return counts.entries

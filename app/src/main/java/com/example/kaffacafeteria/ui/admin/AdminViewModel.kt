@@ -8,13 +8,17 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kaffacafeteria.KaffaApp
 import com.example.kaffacafeteria.data.remote.dto.*
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
+import retrofit2.Response
 
 data class AdminUiState(
     val usuarios: List<UsuarioFullDto> = emptyList(),
     val roles: List<RolFullDto> = emptyList(),
     val categorias: List<CategoriaDto> = emptyList(),
     val productos: List<ProductoDto> = emptyList(),
+    val insumos: List<InsumoDto> = emptyList(),
+    val recetas: List<RecetaDto> = emptyList(),
     val mediosPago: List<MedioPagoDto> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -90,14 +94,42 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun loadInsumos() {
+        viewModelScope.launch {
+            try {
+                val response = catalogApi.getInsumos(perPage = 1000)
+                if (response.isSuccessful) {
+                    uiState = uiState.copy(insumos = response.body()?.data ?: emptyList())
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    fun loadRecetas(productoId: Int) {
+        viewModelScope.launch {
+            try {
+                val response = catalogApi.getInsumosProducto(productoId)
+                if (response.isSuccessful) {
+                    uiState = uiState.copy(recetas = response.body()?.data ?: emptyList())
+                }
+            } catch (_: Exception) {
+                uiState = uiState.copy(recetas = emptyList())
+            }
+        }
+    }
+
     fun loadMediosPago() {
         viewModelScope.launch {
             try {
-                val response = catalogApi.getMediosPago()
+                val response = catalogApi.getMediosPago(perPage = 100)
                 if (response.isSuccessful) {
-                    uiState = uiState.copy(mediosPago = response.body() ?: emptyList())
+                    uiState = uiState.copy(error = null, mediosPago = response.body()?.data ?: emptyList())
+                } else {
+                    uiState = uiState.copy(error = serverErrorMessage(response, "Error al cargar métodos de pago"))
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                uiState = uiState.copy(error = e.message ?: "Error al cargar métodos de pago")
+            }
         }
     }
 
@@ -124,13 +156,10 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         userForm = userForm.copy(selectedRoles = roles)
     }
 
-<<<<<<< HEAD
-    fun setUserRoles(roleIds: List<Int>) {
+fun setUserRoles(roleIds: List<Int>) {
         userForm = userForm.copy(selectedRoles = roleIds.toSet())
     }
 
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
     fun saveUser() {
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, error = null)
@@ -154,11 +183,7 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
                         nombre = userForm.nombre,
                         correo = userForm.correo,
                         password = userForm.password,
-<<<<<<< HEAD
                         passwordConfirmation = userForm.password,
-=======
-                        passwordConfirmation = userForm.passwordConfirmation,
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                         roles = userForm.selectedRoles.toList()
                     )
                     val response = userApi.createUsuario(request)
@@ -198,12 +223,57 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun createMedioPago(request: MedioPagoRequest) {
+        if (uiState.mediosPago.any { it.nombre.equals(request.nombre.trim(), ignoreCase = true) }) {
+            uiState = uiState.copy(error = "Ya existe un método de pago llamado \"${request.nombre.trim()}\"")
+            return
+        }
         viewModelScope.launch {
             try {
-                catalogApi.createMedioPago(request)
-                loadMediosPago()
+                val response = catalogApi.createMedioPago(request)
+                if (response.isSuccessful) {
+                    uiState = uiState.copy(successMessage = "Método de pago creado")
+                    loadMediosPago()
+                } else {
+                    uiState = uiState.copy(error = serverErrorMessage(response, "Error al crear método de pago"))
+                }
             } catch (e: Exception) {
-                uiState = uiState.copy(error = e.message)
+                uiState = uiState.copy(error = e.message ?: "Error al crear método de pago")
+            }
+        }
+    }
+
+    fun deleteMedioPago(id: Int) {
+        viewModelScope.launch {
+            try {
+                val response = catalogApi.deleteMedioPago(id)
+                if (response.isSuccessful) {
+                    uiState = uiState.copy(successMessage = "Método de pago eliminado")
+                    loadMediosPago()
+                } else {
+                    uiState = uiState.copy(error = serverErrorMessage(response, "Error al eliminar método de pago"))
+                }
+            } catch (e: Exception) {
+                uiState = uiState.copy(error = e.message ?: "Error al eliminar método de pago")
+            }
+        }
+    }
+
+    fun updateMedioPago(id: Int, request: MedioPagoRequest) {
+        if (uiState.mediosPago.any { it.id != id && it.nombre.equals(request.nombre.trim(), ignoreCase = true) }) {
+            uiState = uiState.copy(error = "Ya existe un método de pago llamado \"${request.nombre.trim()}\"")
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val response = catalogApi.updateMedioPago(id, request)
+                if (response.isSuccessful) {
+                    uiState = uiState.copy(successMessage = "Método de pago actualizado")
+                    loadMediosPago()
+                } else {
+                    uiState = uiState.copy(error = serverErrorMessage(response, "Error al actualizar método de pago"))
+                }
+            } catch (e: Exception) {
+                uiState = uiState.copy(error = e.message ?: "Error al actualizar método de pago")
             }
         }
     }
@@ -231,6 +301,23 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun updateProducto(id: Int, request: ProductoRequest) {
+        viewModelScope.launch {
+            uiState = uiState.copy(isLoading = true)
+            try {
+                val response = catalogApi.updateProducto(id, request)
+                if (response.isSuccessful) {
+                    uiState = uiState.copy(isLoading = false, successMessage = "Producto actualizado")
+                    loadProductos()
+                } else {
+                    uiState = uiState.copy(isLoading = false, error = "Error al actualizar producto")
+                }
+            } catch (e: Exception) {
+                uiState = uiState.copy(error = e.message, isLoading = false)
+            }
+        }
+    }
+
     fun deleteProducto(id: Int) {
         viewModelScope.launch {
             try {
@@ -242,7 +329,103 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun createInsumo(nombre: String, stock: Double?, unidadMedida: String?) {
+        viewModelScope.launch {
+            uiState = uiState.copy(isLoading = true, error = null)
+            try {
+                val response = catalogApi.createInsumo(InsumoRequest(nombre = nombre, stockActual = stock, unidadMedida = unidadMedida))
+                if (response.isSuccessful) {
+                    uiState = uiState.copy(isLoading = false, successMessage = "Insumo creado")
+                    loadInsumos()
+                } else {
+                    uiState = uiState.copy(isLoading = false, error = "Error al crear insumo")
+                }
+            } catch (e: Exception) {
+                uiState = uiState.copy(isLoading = false, error = e.message)
+            }
+        }
+    }
+
+    fun updateInsumo(id: Int, nombre: String, stock: Double?, unidadMedida: String?) {
+        viewModelScope.launch {
+            uiState = uiState.copy(isLoading = true, error = null)
+            try {
+                val response = catalogApi.updateInsumo(id, InsumoRequest(nombre = nombre, stockActual = stock, unidadMedida = unidadMedida))
+                if (response.isSuccessful) {
+                    uiState = uiState.copy(isLoading = false, successMessage = "Insumo actualizado")
+                    loadInsumos()
+                } else {
+                    uiState = uiState.copy(isLoading = false, error = "Error al actualizar insumo")
+                }
+            } catch (e: Exception) {
+                uiState = uiState.copy(isLoading = false, error = e.message)
+            }
+        }
+    }
+
+    fun deleteInsumo(id: Int) {
+        viewModelScope.launch {
+            try {
+                catalogApi.deleteInsumo(id)
+                loadInsumos()
+            } catch (e: Exception) {
+                uiState = uiState.copy(error = e.message)
+            }
+        }
+    }
+
+    fun addInsumoToProducto(productoId: Int, insumoId: Int, cantidad: Double) {
+        viewModelScope.launch {
+            uiState = uiState.copy(isLoading = true, error = null)
+            try {
+                val response = catalogApi.addInsumoToProducto(productoId, RecetaRequest(insumoId = insumoId, cantidad = cantidad))
+                if (response.isSuccessful) {
+                    uiState = uiState.copy(isLoading = false, successMessage = "Insumo agregado al producto")
+                    loadRecetas(productoId)
+                } else {
+                    uiState = uiState.copy(isLoading = false, error = "Error al agregar insumo al producto")
+                }
+            } catch (e: Exception) {
+                uiState = uiState.copy(isLoading = false, error = e.message)
+            }
+        }
+    }
+
+    fun removeReceta(recetaId: Int, productoId: Int) {
+        viewModelScope.launch {
+            try {
+                catalogApi.deleteReceta(recetaId)
+                loadRecetas(productoId)
+            } catch (e: Exception) {
+                uiState = uiState.copy(error = e.message)
+            }
+        }
+    }
+
     fun clearMessages() {
         uiState = uiState.copy(error = null, successMessage = null)
+    }
+
+    private fun serverErrorMessage(response: Response<*>, fallback: String): String {
+        val code = response.code()
+        val body = runCatching { response.errorBody()?.string() }.getOrNull()
+        val detail = body?.let { raw ->
+            runCatching {
+                val map = Gson().fromJson(raw, Map::class.java)
+                val msg = map["message"] as? String
+                val exception = map["exception"] as? String
+                when {
+                    msg != null && msg.contains("duplicate key", ignoreCase = true) &&
+                        msg.contains("unique constraint", ignoreCase = true) ->
+                        "Ya existe un método de pago con ese nombre en el servidor"
+                    !msg.isNullOrBlank() && msg != "Server Error" -> msg
+                    !exception.isNullOrBlank() -> exception
+                    !msg.isNullOrBlank() -> msg
+                    else -> null
+                }?.take(600)
+            }.getOrNull() ?: body.takeIf { it.isNotBlank() }?.take(600)
+        }
+        return if (!detail.isNullOrBlank()) "$fallback (código $code): $detail"
+        else "$fallback (código $code)"
     }
 }

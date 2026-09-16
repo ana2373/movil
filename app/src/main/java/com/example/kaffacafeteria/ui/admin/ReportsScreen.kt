@@ -19,7 +19,7 @@ import com.example.kaffacafeteria.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReportsScreen(onBack: () -> Unit) {
+fun ReportsScreen(onBack: () -> Unit, onOpenReport: (String) -> Unit) {
     val colorScheme = MaterialTheme.colorScheme
     Column(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
         TopAppBar(
@@ -28,10 +28,10 @@ fun ReportsScreen(onBack: () -> Unit) {
             colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary, titleContentColor = colorScheme.onPrimary)
         )
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            ReportCard(icon = Icons.Default.Today, title = "Reporte Diario", description = "Ventas y pedidos del día", onClick = { })
-            ReportCard(icon = Icons.Default.DateRange, title = "Reporte Semanal", description = "Resumen de la semana", onClick = { })
-            ReportCard(icon = Icons.Default.CalendarMonth, title = "Reporte Mensual", description = "Estadísticas del mes", onClick = { })
-            ReportCard(icon = Icons.Default.Inventory, title = "Inventario", description = "Productos con bajo stock", onClick = { })
+            ReportCard(icon = Icons.Default.Today, title = "Reporte Diario", description = "Ventas y pedidos del día", onClick = { onOpenReport("diario") })
+            ReportCard(icon = Icons.Default.DateRange, title = "Reporte Semanal", description = "Resumen de la semana", onClick = { onOpenReport("semanal") })
+            ReportCard(icon = Icons.Default.CalendarMonth, title = "Reporte Mensual", description = "Estadísticas del mes", onClick = { onOpenReport("mensual") })
+            ReportCard(icon = Icons.Default.Inventory, title = "Inventario", description = "Productos con bajo stock", onClick = { onOpenReport("inventario") })
         }
     }
 }

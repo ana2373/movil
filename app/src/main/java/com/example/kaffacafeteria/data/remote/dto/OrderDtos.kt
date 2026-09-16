@@ -22,7 +22,7 @@ data class PedidoDto(
 data class PedidoDetalleDto(
     val id: Int?,
     @SerializedName("producto_id") val productoId: Int,
-    val cantidad: Int,
+    val cantidad: String,
     @SerializedName("precio_unitario") val precioUnitario: String,
     val subtotal: String,
     val producto: ProductoDto?

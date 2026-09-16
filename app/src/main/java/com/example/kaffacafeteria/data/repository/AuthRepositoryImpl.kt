@@ -3,24 +3,18 @@ package com.example.kaffacafeteria.data.repository
 import com.example.kaffacafeteria.data.local.TokenManager
 import com.example.kaffacafeteria.data.remote.api.AuthApi
 import com.example.kaffacafeteria.data.remote.dto.LoginRequest
-<<<<<<< HEAD
 import com.example.kaffacafeteria.data.remote.dto.RegisterRequest
 import com.example.kaffacafeteria.data.remote.dto.UpdateProfileRequest
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 import com.example.kaffacafeteria.domain.model.Role
 import com.example.kaffacafeteria.domain.model.User
 import com.example.kaffacafeteria.domain.repository.AuthRepository
 import com.example.kaffacafeteria.util.Resource
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
-<<<<<<< HEAD
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 
 class AuthRepositoryImpl(
     private val authApi: AuthApi,
@@ -40,12 +34,8 @@ class AuthRepositoryImpl(
                         nombre = user.nombre,
                         correo = user.correo,
                         activo = user.activo,
-<<<<<<< HEAD
                         roles = user.roles.map { Role(it.id, it.nombre) },
                         foto = user.foto
-=======
-                        roles = user.roles.map { Role(it.id, it.nombre) }
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                     )
                 )
             } else {
@@ -60,7 +50,6 @@ class AuthRepositoryImpl(
         }
     }
 
-<<<<<<< HEAD
     override suspend fun register(nombre: String, correo: String, password: String): Resource<User> {
         return try {
             val response = authApi.register(RegisterRequest(nombre, correo, password))
@@ -148,8 +137,6 @@ class AuthRepositoryImpl(
         }
     }
 
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
     override suspend fun getMe(): Resource<User> {
         return try {
             val response = authApi.me()
@@ -161,12 +148,8 @@ class AuthRepositoryImpl(
                         nombre = user.nombre,
                         correo = user.correo,
                         activo = user.activo,
-<<<<<<< HEAD
                         roles = user.roles.map { Role(it.id, it.nombre) },
                         foto = user.foto
-=======
-                        roles = user.roles.map { Role(it.id, it.nombre) }
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
                     )
                 )
             } else {

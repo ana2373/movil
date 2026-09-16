@@ -4,10 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-<<<<<<< HEAD
 import androidx.compose.foundation.shape.CircleShape
-=======
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -19,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-<<<<<<< HEAD
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -29,10 +25,6 @@ import androidx.activity.compose.BackHandler
 import com.example.kaffacafeteria.data.remote.dto.RolFullDto
 import com.example.kaffacafeteria.ui.theme.*
 import com.example.kaffacafeteria.util.createViewModel
-=======
-import androidx.compose.ui.unit.dp
-import com.example.kaffacafeteria.ui.theme.*
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +34,6 @@ fun AdminPanelScreen(
     onNavigateToCategories: () -> Unit,
     onNavigateToProducts: () -> Unit,
     onNavigateToPaymentMethods: () -> Unit,
-<<<<<<< HEAD
     onNavigateToReports: () -> Unit,
     onNavigateToOrders: () -> Unit,
     onNavigateToInsumos: () -> Unit,
@@ -52,6 +43,7 @@ fun AdminPanelScreen(
     onNavigateToGastos: () -> Unit,
     onNavigateToCaja: () -> Unit,
     onNavigateToTurnos: () -> Unit,
+    onNavigateToPromociones: () -> Unit,
     onNavigateToProfile: () -> Unit = {},
     onLogout: () -> Unit = {},
     viewModel: AdminViewModel = createViewModel { AdminViewModel(it) },
@@ -93,7 +85,7 @@ fun AdminPanelScreen(
                         KpiData("Ingresos hoy", "—", Icons.Default.Paid, Terracotta),
                         KpiData("Pedidos hoy", "—", Icons.Default.Receipt, PrimaryGreen),
                         KpiData("Clientes", "—", Icons.Default.People, CoffeeBrown),
-                        KpiData("Ticket prom.", "—", Icons.Default.Calculate, Color(0xFF2563EB))
+                        KpiData("Ticket prom.", "—", Icons.Default.Calculate, Negro)
                     )
                 )
             } else {
@@ -102,7 +94,7 @@ fun AdminPanelScreen(
                         KpiData("Ingresos hoy", "$${"%.0f".format(dashboard.ingresosHoy)}", Icons.Default.Paid, Terracotta),
                         KpiData("Pedidos hoy", "${dashboard.pedidosHoy}", Icons.Default.Receipt, PrimaryGreen),
                         KpiData("Clientes", "${dashboard.clientesRegistrados}", Icons.Default.People, CoffeeBrown),
-                        KpiData("Ticket prom.", "$${"%.0f".format(dashboard.ticketPromedio)}", Icons.Default.Calculate, Color(0xFF2563EB))
+                        KpiData("Ticket prom.", "$${"%.0f".format(dashboard.ticketPromedio)}", Icons.Default.Calculate, Negro)
                     )
                 )
             }
@@ -132,7 +124,7 @@ fun AdminPanelScreen(
                     } else {
                         dashboard.topProductos.forEach { item ->
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("${item.cantidad}", fontWeight = FontWeight.Black, color = PrimaryGreen, modifier = Modifier.width(34.dp))
+                                Text("${item.cantidad}", fontWeight = FontWeight.Black, color = colorScheme.primary, modifier = Modifier.width(34.dp))
                                 Text(item.nombre, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                             }
                         }
@@ -144,27 +136,28 @@ fun AdminPanelScreen(
 
             // ── Módulos de administración general ──
             SectionTitle("Gestión de oferta")
-            AdminCard(icon = Icons.Default.Category, title = "Categorías", description = "Organización del menú por categorías", color = Color(0xFF2E7D32), onClick = onNavigateToCategories)
-            AdminCard(icon = Icons.Default.Coffee, title = "Productos", description = "Control del catálogo de productos", color = Color(0xFF6F4E37), onClick = onNavigateToProducts)
+            AdminCard(icon = Icons.Default.Category, title = "Categorías", description = "Organización del menú por categorías", color = PrimaryGreen, onClick = onNavigateToCategories)
+            AdminCard(icon = Icons.Default.Coffee, title = "Productos", description = "Control del catálogo de productos", color = CafeOscuro, onClick = onNavigateToProducts)
 
             SectionTitle("Ventas y pedidos")
-            AdminCard(icon = Icons.Default.ReceiptLong, title = "Historial de pedidos", description = "Pedidos y facturas emitidas", color = Color(0xFF2563EB), onClick = onNavigateToOrders)
+            AdminCard(icon = Icons.Default.ReceiptLong, title = "Historial de pedidos", description = "Pedidos y facturas emitidas", color = Negro, onClick = onNavigateToOrders)
+            AdminCard(icon = Icons.Default.Campaign, title = "Promociones", description = "Crea promociones con color e imagen", color = SecondaryGreen, onClick = onNavigateToPromociones)
 
             SectionTitle("Logística e inventario")
-            AdminCard(icon = Icons.Default.Inventory, title = "Insumos", description = "Materias primas e inventario", color = Color(0xFF7C3AED), onClick = onNavigateToInsumos)
-            AdminCard(icon = Icons.Default.Warning, title = "Mermas", description = "Registro de pérdidas o mermas", color = Color(0xFFDC2626), onClick = onNavigateToMermas)
-            AdminCard(icon = Icons.Default.ShoppingCart, title = "Compras a proveedores", description = "Control de compras", color = Color(0xFF0891B2), onClick = onNavigateToCompras)
-            AdminCard(icon = Icons.Default.LocalShipping, title = "Proveedores", description = "Base de datos de proveedores", color = Color(0xFF9A3412), onClick = onNavigateToProveedores)
+            AdminCard(icon = Icons.Default.Inventory, title = "Insumos", description = "Materias primas e inventario", color = SecondaryGreen, onClick = onNavigateToInsumos)
+            AdminCard(icon = Icons.Default.Warning, title = "Mermas", description = "Registro de pérdidas o mermas", color = CafeOscuro, onClick = onNavigateToMermas)
+            AdminCard(icon = Icons.Default.ShoppingCart, title = "Compras a proveedores", description = "Control de compras", color = Negro, onClick = onNavigateToCompras)
+            AdminCard(icon = Icons.Default.LocalShipping, title = "Proveedores", description = "Base de datos de proveedores", color = CoffeeBrown, onClick = onNavigateToProveedores)
 
             SectionTitle("Finanzas y operaciones")
-            AdminCard(icon = Icons.Default.MoneyOff, title = "Gastos generales", description = "Registro de gastos", color = Color(0xFFE11D48), onClick = onNavigateToGastos)
-            AdminCard(icon = Icons.Default.PointOfSale, title = "Cajas de cobro", description = "Control de flujo de cajas", color = Color(0xFF65A30D), onClick = onNavigateToCaja)
-            AdminCard(icon = Icons.Default.Schedule, title = "Turnos laborales", description = "Asignación de turnos a baristas", color = Color(0xFF0D9488), onClick = onNavigateToTurnos)
-            AdminCard(icon = Icons.Default.BarChart, title = "Reportes estadísticos", description = "Visualización de reportes y configuración", color = Color(0xFF9333EA), onClick = onNavigateToReports)
+            AdminCard(icon = Icons.Default.MoneyOff, title = "Gastos generales", description = "Registro de gastos", color = CafeOscuro, onClick = onNavigateToGastos)
+            AdminCard(icon = Icons.Default.PointOfSale, title = "Cajas de cobro", description = "Control de flujo de cajas", color = PrimaryGreen, onClick = onNavigateToCaja)
+            AdminCard(icon = Icons.Default.Schedule, title = "Turnos laborales", description = "Asignación de turnos a baristas", color = Negro, onClick = onNavigateToTurnos)
+            AdminCard(icon = Icons.Default.BarChart, title = "Reportes estadísticos", description = "Visualización de reportes y configuración", color = CoffeeBrown, onClick = onNavigateToReports)
 
             SectionTitle("Usuarios y roles")
             AdminCard(icon = Icons.Default.People, title = "Usuarios", description = "Gestionar usuarios, baristas y roles", color = colorScheme.primary, onClick = onNavigateToUsers)
-            AdminCard(icon = Icons.Default.Payment, title = "Métodos de Pago", description = "Configurar métodos de pago", color = Color(0xFF4F46E5), onClick = onNavigateToPaymentMethods)
+            AdminCard(icon = Icons.Default.Payment, title = "Métodos de Pago", description = "Configurar métodos de pago", color = SecondaryGreen, onClick = onNavigateToPaymentMethods)
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -238,6 +231,8 @@ fun KpiRow(kpis: List<KpiData>) {
 @Composable
 private fun KpiCard(kpi: KpiData, modifier: Modifier = Modifier) {
     val colorScheme = MaterialTheme.colorScheme
+    val dark = isDarkModeActive()
+    val accent = if (dark && (kpi.color == Terracotta || kpi.color == CoffeeBrown || kpi.color == Negro)) VerdeClaro else kpi.color
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
@@ -245,11 +240,11 @@ private fun KpiCard(kpi: KpiData, modifier: Modifier = Modifier) {
         modifier = modifier
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
-            Surface(shape = CircleShape, color = kpi.color.copy(alpha = 0.15f), modifier = Modifier.size(36.dp)) {
-                Box(contentAlignment = Alignment.Center) { Icon(kpi.icon, contentDescription = null, tint = kpi.color, modifier = Modifier.size(20.dp)) }
+            Surface(shape = CircleShape, color = accent.copy(alpha = 0.15f), modifier = Modifier.size(36.dp)) {
+                Box(contentAlignment = Alignment.Center) { Icon(kpi.icon, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp)) }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text(kpi.value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = kpi.color)
+            Text(kpi.value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = accent)
             Text(kpi.title, style = MaterialTheme.typography.labelSmall, color = colorScheme.onSurfaceVariant, maxLines = 2)
         }
     }
@@ -258,6 +253,8 @@ private fun KpiCard(kpi: KpiData, modifier: Modifier = Modifier) {
 @Composable
 fun SevenDayChart(data: List<DaySales>) {
     val colorScheme = MaterialTheme.colorScheme
+    val dark = isDarkModeActive()
+    val chartValueColor = if (dark) VerdeClaro else Terracotta
     if (data.isEmpty()) {
         Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
             Text("Sin datos", color = colorScheme.onSurfaceVariant)
@@ -272,7 +269,7 @@ fun SevenDayChart(data: List<DaySales>) {
     ) {
         data.forEach { day ->
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-                Text("$${"%.0f".format(day.total)}", fontSize = 9.sp, color = Terracotta, fontWeight = FontWeight.Bold)
+                Text("$${"%.0f".format(day.total)}", fontSize = 9.sp, color = chartValueColor, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
                 Box(
                     modifier = Modifier
@@ -313,23 +310,6 @@ fun AddBaristaCard(onClick: () -> Unit) {
                 Text("Crea una cuenta de barista con su contraseña", style = MaterialTheme.typography.bodyMedium, color = colorScheme.onSecondary.copy(alpha = 0.9f))
             }
             Icon(Icons.Default.AddCircle, contentDescription = null, tint = colorScheme.onSecondary, modifier = Modifier.size(32.dp))
-=======
-    onNavigateToReports: () -> Unit
-) {
-    val colorScheme = MaterialTheme.colorScheme
-    Column(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
-        TopAppBar(
-            title = { Text("Panel de Administración") },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = colorScheme.onPrimary) } },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary, titleContentColor = colorScheme.onPrimary)
-        )
-        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            AdminCard(icon = Icons.Default.People, title = "Usuarios", description = "Gestionar usuarios y roles", color = colorScheme.primary, onClick = onNavigateToUsers)
-            AdminCard(icon = Icons.Default.Category, title = "Categorías", description = "Gestionar categorías de productos", color = colorScheme.secondary, onClick = onNavigateToCategories)
-            AdminCard(icon = Icons.Default.Coffee, title = "Productos", description = "Gestionar catálogo de productos", color = colorScheme.tertiary, onClick = onNavigateToProducts)
-            AdminCard(icon = Icons.Default.Payment, title = "Métodos de Pago", description = "Configurar métodos de pago", color = colorScheme.secondary, onClick = onNavigateToPaymentMethods)
-            AdminCard(icon = Icons.Default.BarChart, title = "Reportes", description = "Ver reportes y estadísticas", color = colorScheme.onSurfaceVariant, onClick = onNavigateToReports)
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
         }
     }
 }
@@ -337,15 +317,16 @@ fun AddBaristaCard(onClick: () -> Unit) {
 @Composable
 fun AdminCard(icon: ImageVector, title: String, description: String, color: Color, onClick: () -> Unit) {
     val colorScheme = MaterialTheme.colorScheme
+    val dark = isDarkModeActive()
+    val accent = if (dark && (color == CafeOscuro || color == CoffeeBrown || color == Negro || color == Terracotta)) VerdeClaro else color
     Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
         Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-<<<<<<< HEAD
-            Surface(shape = RoundedCornerShape(12.dp), color = color.copy(alpha = 0.12f), modifier = Modifier.size(56.dp)) {
-                Box(contentAlignment = Alignment.Center) { Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(28.dp)) }
+            Surface(shape = RoundedCornerShape(12.dp), color = accent.copy(alpha = 0.12f), modifier = Modifier.size(56.dp)) {
+                Box(contentAlignment = Alignment.Center) { Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(28.dp)) }
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = color)
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = accent)
                 Text(description, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
             }
             Icon(Icons.Default.ChevronRight, contentDescription = null, tint = colorScheme.onSurfaceVariant)
@@ -402,16 +383,3 @@ fun AddBaristaDialog(
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
     )
 }
-=======
-            Surface(shape = RoundedCornerShape(12.dp), color = color.copy(alpha = 0.1f), modifier = Modifier.size(56.dp)) {
-                Box(contentAlignment = Alignment.Center) { Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(28.dp)) }
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = color)
-                Text(description, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
-            }
-        }
-    }
-}
->>>>>>> 7f72da0ee7bae7622924dee7366abac3eab17855
