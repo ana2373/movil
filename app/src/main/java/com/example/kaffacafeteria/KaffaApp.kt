@@ -44,7 +44,10 @@ class AppContainer(context: Application) {
     val transactionApi: TransactionApi = retrofit.create(TransactionApi::class.java)
     val dashboardApi: DashboardApi = retrofit.create(DashboardApi::class.java)
     val turnoApi: TurnoApi = retrofit.create(TurnoApi::class.java)
-val mensajeApi: MensajeApi = retrofit.create(MensajeApi::class.java)
+    val mensajeApi: MensajeApi = retrofit.create(MensajeApi::class.java)
+
+    /** Reportes/novedades: el barista los crea, el administrador los gestiona. */
+    val reporteApi: ReporteApi = retrofit.create(ReporteApi::class.java)
 
     val authRepository: AuthRepository = AuthRepositoryImpl(authApi, tokenManager)
     val catalogRepository: CatalogRepository = CatalogRepositoryImpl(catalogApi)

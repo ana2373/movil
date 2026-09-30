@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,12 +20,16 @@ import com.example.kaffacafeteria.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReportsScreen(onBack: () -> Unit, onOpenReport: (String) -> Unit) {
+fun ReportsScreen(
+    onBack: () -> Unit,
+    onOpenReport: (String) -> Unit,
+    onOpenArchived: () -> Unit = {}
+) {
     val colorScheme = MaterialTheme.colorScheme
     Column(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
         TopAppBar(
             title = { Text("Reportes") },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = colorScheme.onPrimary) } },
+            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = colorScheme.onPrimary) } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary, titleContentColor = colorScheme.onPrimary)
         )
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -32,6 +37,17 @@ fun ReportsScreen(onBack: () -> Unit, onOpenReport: (String) -> Unit) {
             ReportCard(icon = Icons.Default.DateRange, title = "Reporte Semanal", description = "Resumen de la semana", onClick = { onOpenReport("semanal") })
             ReportCard(icon = Icons.Default.CalendarMonth, title = "Reporte Mensual", description = "Estadísticas del mes", onClick = { onOpenReport("mensual") })
             ReportCard(icon = Icons.Default.Inventory, title = "Inventario", description = "Productos con bajo stock", onClick = { onOpenReport("inventario") })
+
+            HorizontalDivider(color = colorScheme.outlineVariant)
+
+            // Acceso al archivo: los PDF generados siguen guardados en la app
+            // y se pueden volver a descargar o compartir.
+            ReportCard(
+                icon = Icons.Default.PictureAsPdf,
+                title = "Reportes guardados (PDF)",
+                description = "Consulta, comparte o descarga los reportes ya generados",
+                onClick = onOpenArchived
+            )
         }
     }
 }

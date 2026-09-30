@@ -1,8 +1,12 @@
 package com.example.kaffacafeteria.data.remote.api
 
+import com.example.kaffacafeteria.data.remote.dto.ForgotPasswordRequest
 import com.example.kaffacafeteria.data.remote.dto.LoginRequest
 import com.example.kaffacafeteria.data.remote.dto.LoginResponse
+import com.example.kaffacafeteria.data.remote.dto.MessageResponse
 import com.example.kaffacafeteria.data.remote.dto.RegisterRequest
+import com.example.kaffacafeteria.data.remote.dto.RegisterResponse
+import com.example.kaffacafeteria.data.remote.dto.ResetPasswordRequest
 import com.example.kaffacafeteria.data.remote.dto.UpdateProfileRequest
 import com.example.kaffacafeteria.data.remote.dto.UsuarioDto
 import okhttp3.MultipartBody
@@ -18,8 +22,12 @@ interface AuthApi {
     @POST("login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
+    /**
+     * Crea la cuenta y envía el correo de verificación.
+     * No devuelve token: el usuario debe verificar su correo antes de entrar.
+     */
     @POST("registro")
-    suspend fun register(@Body request: RegisterRequest): Response<LoginResponse>
+    suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>
 
     @GET("me")
     suspend fun me(): Response<UsuarioDto>
@@ -33,4 +41,18 @@ interface AuthApi {
 
     @POST("logout")
     suspend fun logout(): Response<Any>
+
+    /**
+     * Reenvía el correo de verificación.
+     * El backend responde igual exista o no el usuario, para no filtrar
+     * qué correos están registrados.
+     */
+    @POST("email/verification-notification")
+    suspend fun reenviarVerificacion(@Body request: ForgotPasswordRequest): Response<MessageResponse>
+
+    @POST("forgot-password")
+    suspend fun forgotPassword(@Body request: ForgotPasswordRequest): Response<MessageResponse>
+
+    @POST("reset-password")
+    suspend fun resetPassword(@Body request: ResetPasswordRequest): Response<MessageResponse>
 }

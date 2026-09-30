@@ -28,6 +28,7 @@ import com.example.kaffacafeteria.util.createViewModel
 fun LoginScreen(
     onLoginSuccess: (com.example.kaffacafeteria.domain.model.User?) -> Unit,
     onNavigateToRegister: () -> Unit,
+    onNavigateToForgotPassword: () -> Unit = {},
     viewModel: LoginViewModel = createViewModel { LoginViewModel(it) }
 ) {
     val state = viewModel.uiState
@@ -66,7 +67,15 @@ fun LoginScreen(
                 unfocusedLabelColor = colorScheme.onSurfaceVariant
             )
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Acceso directo a la recuperación de contraseña.
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            TextButton(onClick = onNavigateToForgotPassword) {
+                Text("¿Olvidaste tu contraseña?", color = colorScheme.secondary)
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = state.password, onValueChange = viewModel::updatePassword,
@@ -95,6 +104,34 @@ fun LoginScreen(
         if (state.error != null) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(state.error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        }
+
+        // Cuenta creada pero sin verificar: se ofrece reenviar el enlace en
+        // lugar de dejar al usuario atascado en un error de acceso.
+        if (state.emailSinVerificar) {
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = viewModel::reenviarVerificacion,
+                enabled = !state.isResending,
+                modifier = Modifier.fillMaxWidth().height(48.dp)
+            ) {
+                if (state.isResending) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                } else {
+                    Text("Reenviar correo de verificación", color = colorScheme.primary)
+                }
+            }
+        }
+
+        state.mensajeVerificacion?.let { mensaje ->
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                mensaje,
+                style = MaterialTheme.typography.bodySmall,
+                color = colorScheme.tertiary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))

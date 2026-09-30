@@ -20,6 +20,13 @@ import java.util.Locale
 
 private val Application.promosDataStore by preferencesDataStore(name = "promociones_store")
 
+/**
+ * Promoción del splash.
+ *
+ * Vigencia: se guarda un único instante (`expiracionMillis`) con día y hora.
+ * Si es `null` la promoción no caduca y queda activa hasta que el
+ * administrador la desactive o la elimine.
+ */
 data class Promocion(
     val id: Int,
     val nombre: String,
@@ -27,32 +34,31 @@ data class Promocion(
     val tipo: String,
     val colorIndex: Int,
     val imagenUri: String? = null,
-    val fechaInicio: String? = null,
-    val fechaFin: String? = null,
     val expiracionMillis: Long? = null,
     val activa: Boolean = true
 )
 
-fun Promocion.fechaLimiteMillis(): Long? {
-    expiracionMillis?.let { return it }
-    val fin = fechaFin ?: return null
-    val parts = fin.split("-").mapNotNull { it.toIntOrNull() }
-    if (parts.size != 3) return null
-    return runCatching {
-        Calendar.getInstance().apply {
-            clear()
-            set(parts[0], parts[1] - 1, parts[2], 23, 59, 59)
-        }.timeInMillis
-    }.getOrNull()
-}
+/** Instante en que deja de mostrarse la promoción, o null si no caduca. */
+fun Promocion.fechaLimiteMillis(): Long? = expiracionMillis
 
 fun Promocion.estaExpirada(now: Long = System.currentTimeMillis()): Boolean {
     val limite = fechaLimiteMillis() ?: return false
     return now >= limite
 }
 
+/** Vigencia en formato 12 h (am/pm) para la lista: "25/06/2025, 03:30 p. m." */
 fun formatExpiracion(millis: Long): String =
-    SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(millis))
+    SimpleDateFormat("dd/MM/yyyy, hh:mm a", Locale("es", "CO")).format(Date(millis))
+
+/** Combina el día elegido con la hora (formato 24 h) en un único instante. */
+fun buildExpiracionMillis(diaMillis: Long, hora: Int, minuto: Int): Long =
+    Calendar.getInstance().apply {
+        timeInMillis = diaMillis
+        set(Calendar.HOUR_OF_DAY, hora)
+        set(Calendar.MINUTE, minuto)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
 
 data class PromocionesUiState(
     val promociones: List<Promocion> = emptyList(),
@@ -60,6 +66,12 @@ data class PromocionesUiState(
     val error: String? = null
 )
 
+/**
+ * Almacén local de promociones.
+ *
+ * Se guardan en DataStore (no hay endpoint de promociones en el backend), por
+ * eso el CRUD es local: crear, editar, activar/desactivar y eliminar.
+ */
 class PromocionesViewModel(application: Application) : AndroidViewModel(application) {
     private val gson = Gson()
     private val promosKey = stringPreferencesKey("promociones")
@@ -78,7 +90,7 @@ class PromocionesViewModel(application: Application) : AndroidViewModel(applicat
                     emptyList()
                 } else {
                     try {
-                        gson.fromJson(json, object : TypeToken<List<Promocion>>() {}.type)
+                        gson.fromJson(json, object : TypeToken<List<Promocion>>() {}.type) ?: emptyList()
                     } catch (_: Exception) { emptyList() }
                 }
                 uiState = uiState.copy(promociones = list, isLoading = false)
@@ -88,10 +100,25 @@ class PromocionesViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    /** Alta de una promoción nueva con id correlativo. */
     fun create(promo: Promocion) {
         viewModelScope.launch {
             val nextId = (uiState.promociones.maxOfOrNull { it.id } ?: 0) + 1
-            val updated = uiState.promociones + promo.copy(id = nextId)
+            persist(uiState.promociones + promo.copy(id = nextId))
+        }
+    }
+
+    /**
+     * Edición de una promoción existente.
+     *
+     * Se conserva el id original para no romper la referencia de la imagen ni
+     * el historial; sólo cambian los campos editables.
+     */
+    fun update(promo: Promocion) {
+        viewModelScope.launch {
+            val updated = uiState.promociones.map {
+                if (it.id == promo.id) promo.copy(id = it.id) else it
+            }
             persist(updated)
         }
     }
@@ -105,8 +132,7 @@ class PromocionesViewModel(application: Application) : AndroidViewModel(applicat
 
     fun delete(promo: Promocion) {
         viewModelScope.launch {
-            val updated = uiState.promociones.filter { it.id != promo.id }
-            persist(updated)
+            persist(uiState.promociones.filterNot { it.id == promo.id })
         }
     }
 

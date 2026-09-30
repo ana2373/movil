@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,7 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.kaffacafeteria.ui.components.EmptyState
-import com.example.kaffacafeteria.ui.theme.*
+import com.example.kaffacafeteria.ui.components.LoadingIndicator
+import com.example.kaffacafeteria.ui.theme.PromoPalettes
 import com.example.kaffacafeteria.util.createViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -46,80 +48,173 @@ fun PromocionesScreen(
 ) {
     val state = viewModel.uiState
     val colorScheme = MaterialTheme.colorScheme
-    var showCreateDialog by remember { mutableStateOf(false) }
+
+    // Una sola variable controla el diálogo: null = cerrado, con id = edición.
+    var promoEnEdicion by remember { mutableStateOf<Promocion?>(null) }
+    var mostrarDialogo by remember { mutableStateOf(false) }
+    // Diálogo de confirmación de borrado (evita eliminar con un toque accidental).
+    var porEliminar by remember { mutableStateOf<Promocion?>(null) }
 
     Column(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
         TopAppBar(
             title = { Text("Promociones") },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = colorScheme.onPrimary) } },
-            actions = { IconButton(onClick = { showCreateDialog = true }) { Icon(Icons.Default.Add, contentDescription = "Crear promoción", tint = colorScheme.onPrimary) } },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary, titleContentColor = colorScheme.onPrimary)
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = colorScheme.onPrimary)
+                }
+            },
+            actions = {
+                IconButton(onClick = { promoEnEdicion = null; mostrarDialogo = true }) {
+                    Icon(Icons.Default.Add, contentDescription = "Crear promoción", tint = colorScheme.onPrimary)
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = colorScheme.primary,
+                titleContentColor = colorScheme.onPrimary
+            )
         )
 
         when {
+            state.isLoading -> LoadingIndicator()
             state.promociones.isEmpty() -> EmptyState("No hay promociones. Pulsa + para crear una.")
-            else -> LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            else -> LazyColumn(
+                contentPadding = PaddingValues(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 items(state.promociones, key = { it.id }) { promo ->
-                    val palette = PromoPalettes.getOrElse(promo.colorIndex) { PromoPalettes.first() }
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = palette.cardBackground),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(promo.nombre, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = palette.titleText)
-                                    Text(promo.tipo, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = palette.highlightText)
-                                }
-                                TaskStatus(
-                                    activa = promo.activa,
-                                    activaColor = palette.accentDark,
-                                    onClick = { viewModel.toggleActiva(promo) }
-                                )
-                            }
-                            promo.imagenUri?.let { uri ->
-                                Spacer(modifier = Modifier.height(10.dp))
-                                AsyncImage(model = uri, contentDescription = promo.nombre, modifier = Modifier.fillMaxWidth().height(120.dp).clip(RoundedCornerShape(12.dp)), contentScale = ContentScale.Crop)
-                            }
-                            if (promo.descripcion.isNotBlank()) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(promo.descripcion, style = MaterialTheme.typography.bodyMedium, color = palette.subtitleText)
-                            }
-                            if (promo.estaExpirada()) {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text("Expirada", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.error)
-                            }
-                            if (promo.fechaInicio != null || promo.fechaFin != null || promo.expiracionMillis != null) {
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    listOfNotNull(
-                                        promo.fechaInicio?.let { "Inicio: $it" },
-                                        promo.fechaFin?.let { "Fin: $it" },
-                                        promo.expiracionMillis?.let { "Expira: ${formatExpiracion(it)}" }
-                                    ).joinToString("  ·  "),
-                                    style = MaterialTheme.typography.labelSmall, color = palette.subtitleText
-                                )
-                            }
-                            Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) {
-                                IconButton(onClick = { viewModel.delete(promo) }) { Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error) }
-                            }
-                        }
-                    }
+                    PromocionCard(
+                        promo = promo,
+                        onToggleActiva = { viewModel.toggleActiva(promo) },
+                        onEditar = { promoEnEdicion = promo; mostrarDialogo = true },
+                        onEliminar = { porEliminar = promo }
+                    )
                 }
             }
         }
     }
 
-    if (showCreateDialog) {
-        CreatePromocionDialog(
-            onDismiss = { showCreateDialog = false },
+    if (mostrarDialogo) {
+        PromocionDialog(
+            inicial = promoEnEdicion,
+            onDismiss = { mostrarDialogo = false; promoEnEdicion = null },
             onConfirm = { promo ->
-                viewModel.create(promo)
-                showCreateDialog = false
+                if (promoEnEdicion != null) viewModel.update(promo) else viewModel.create(promo)
+                mostrarDialogo = false
+                promoEnEdicion = null
             }
         )
+    }
+
+    porEliminar?.let { promo ->
+        AlertDialog(
+            onDismissRequest = { porEliminar = null },
+            title = { Text("Eliminar promoción", fontWeight = FontWeight.Bold) },
+            text = { Text("Se eliminará \"${promo.nombre}\" y ya no se mostrará en el inicio. Esta acción no se puede deshacer.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.delete(promo)
+                        porEliminar = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = colorScheme.error)
+                ) { Text("Eliminar") }
+            },
+            dismissButton = { TextButton(onClick = { porEliminar = null }) { Text("Cancelar") } }
+        )
+    }
+}
+
+@Composable
+private fun PromocionCard(
+    promo: Promocion,
+    onToggleActiva: () -> Unit,
+    onEditar: () -> Unit,
+    onEliminar: () -> Unit
+) {
+    val palette = PromoPalettes.getOrElse(promo.colorIndex) { PromoPalettes.first() }
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = palette.cardBackground),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        promo.nombre,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
+                        color = palette.titleText
+                    )
+                    Text(
+                        promo.tipo,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = palette.highlightText
+                    )
+                }
+                TaskStatus(
+                    activa = promo.activa,
+                    activaColor = palette.accentDark,
+                    onClick = onToggleActiva
+                )
+            }
+
+            promo.imagenUri?.let { uri ->
+                Spacer(modifier = Modifier.height(10.dp))
+                AsyncImage(
+                    model = uri,
+                    contentDescription = promo.nombre,
+                    modifier = Modifier.fillMaxWidth().height(120.dp).clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            if (promo.descripcion.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(promo.descripcion, style = MaterialTheme.typography.bodyMedium, color = palette.subtitleText)
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+            if (promo.expiracionMillis != null) {
+                Text(
+                    "Vence: ${formatExpiracion(promo.expiracionMillis)}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (promo.estaExpirada()) MaterialTheme.colorScheme.error else palette.subtitleText,
+                    fontWeight = if (promo.estaExpirada()) FontWeight.Bold else FontWeight.Normal
+                )
+                if (promo.estaExpirada()) {
+                    Text(
+                        "Expirada",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            } else {
+                Text(
+                    "Sin fecha de vencimiento",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = palette.subtitleText
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = onEditar) {
+                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Editar")
+                }
+                IconButton(onClick = onEliminar) {
+                    Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
     }
 }
 
@@ -131,57 +226,110 @@ private fun TaskStatus(activa: Boolean, activaColor: Color, onClick: () -> Unit)
         modifier = Modifier.clickable(onClick = onClick)
     ) {
         Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(8.dp).background(if (activa) activaColor else Color.Gray, RoundedCornerShape(4.dp)))
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(if (activa) activaColor else Color.Gray, RoundedCornerShape(4.dp))
+            )
             Spacer(modifier = Modifier.width(6.dp))
-            Text(if (activa) "Activa" else "Inactiva", fontSize = 12.sp, color = if (activa) activaColor else Color.Gray, fontWeight = FontWeight.SemiBold)
+            Text(
+                if (activa) "Activa" else "Inactiva",
+                fontSize = 12.sp,
+                color = if (activa) activaColor else Color.Gray,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 }
 
+/**
+ * Alta y edición de promociones.
+ *
+ * La vigencia se elige con un selector de día y otro de hora en formato 12 h
+ * (am/pm). Si no se elige nada, la promoción queda sin vencimiento y sólo
+ * termina cuando el administrador la desactiva o la elimina.
+ *
+ * @param inicial promoción a editar; `null` para crear una nueva.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreatePromocionDialog(
+private fun PromocionDialog(
+    inicial: Promocion?,
     onDismiss: () -> Unit,
     onConfirm: (Promocion) -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val context = LocalContext.current
-    var nombre by remember { mutableStateOf("") }
-    var descripcion by remember { mutableStateOf("") }
-    var tipo by remember { mutableStateOf(listOf("Descuento", "2x1", "Combo", "Personalizado").first()) }
-    var colorIndex by remember { mutableStateOf(0) }
-    var imagenUri by remember { mutableStateOf<Uri?>(null) }
-    var fechaInicio by remember { mutableStateOf("") }
-    var fechaFin by remember { mutableStateOf("") }
-    var expDiaMillis by remember { mutableStateOf<Long?>(null) }
-    var expHoraMin by remember { mutableStateOf<Int?>(null) }
-    val tipos = listOf("Descuento", "2x1", "Combo", "Personalizado")
 
-    val expDiaLabel = expDiaMillis?.let { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(it)) } ?: "Elegir día"
-    val expHoraLabel = expHoraMin?.let { "%02d:%02d".format(it / 60, it % 60) } ?: "Elegir hora"
+    var nombre by remember { mutableStateOf(inicial?.nombre ?: "") }
+    var descripcion by remember { mutableStateOf(inicial?.descripcion ?: "") }
+    var tipo by remember { mutableStateOf(inicial?.tipo ?: TIPOS_PROMOCION.first()) }
+    var colorIndex by remember { mutableStateOf(inicial?.colorIndex ?: 0) }
+    var imagenUri by remember { mutableStateOf(inicial?.imagenUri) }
+
+    // Día y hora por separado; se combinan al guardar.
+    var diaMillis by remember { mutableStateOf(inicial?.expiracionMillis) }
+    var hora by remember { mutableStateOf(inicial?.expiracionMillis?.let { minutoDelDia(it) } ?: DEFAULT_HORA) }
 
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri -> imagenUri = uri }
+    ) { uri -> imagenUri = uri?.toString() }
+
+    val esEdicion = inicial != null
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Crear Promoción", fontWeight = FontWeight.Bold) },
+        title = {
+            Text(
+                if (esEdicion) "Editar Promoción" else "Crear Promoción",
+                fontWeight = FontWeight.Bold
+            )
+        },
         text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre de la promoción") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant))
-                OutlinedTextField(value = descripcion, onValueChange = { descripcion = it }, label = { Text("Mensaje a mostrar (ej. 20% DCTO en bebidas)") }, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant))
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                OutlinedTextField(
+                    value = nombre,
+                    onValueChange = { nombre = it },
+                    label = { Text("Nombre de la promoción") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colorScheme.primary,
+                        focusedLabelColor = colorScheme.primary,
+                        unfocusedBorderColor = colorScheme.outline,
+                        unfocusedLabelColor = colorScheme.onSurfaceVariant
+                    )
+                )
+
+                OutlinedTextField(
+                    value = descripcion,
+                    onValueChange = { descripcion = it },
+                    label = { Text("Mensaje a mostrar (ej. 20% DCTO en bebidas)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colorScheme.primary,
+                        focusedLabelColor = colorScheme.primary,
+                        unfocusedBorderColor = colorScheme.outline,
+                        unfocusedLabelColor = colorScheme.onSurfaceVariant
+                    )
+                )
 
                 Column {
                     Text("Tipo de promoción:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                     Row {
-                        tipos.forEach { t ->
+                        TIPOS_PROMOCION.forEach { t ->
                             FilterChip(
                                 selected = tipo == t,
                                 onClick = { tipo = t },
                                 label = { Text(t) },
                                 modifier = Modifier.padding(end = 6.dp),
-                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = colorScheme.secondary, selectedLabelColor = colorScheme.onSecondary)
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = colorScheme.secondary,
+                                    selectedLabelColor = colorScheme.onSecondary
+                                )
                             )
                         }
                     }
@@ -199,8 +347,9 @@ fun CreatePromocionDialog(
                                     .background(palette.accentDark)
                                     .clickable { colorIndex = index }
                                     .then(
-                                        if (colorIndex == index) Modifier.border(3.dp, colorScheme.primary, RoundedCornerShape(8.dp)).padding(1.dp)
-                                        else Modifier
+                                        if (colorIndex == index) {
+                                            Modifier.border(3.dp, colorScheme.primary, RoundedCornerShape(8.dp))
+                                        } else Modifier
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -215,32 +364,42 @@ fun CreatePromocionDialog(
 
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (imagenUri != null) {
-                        AsyncImage(model = imagenUri, contentDescription = "Imagen", modifier = Modifier.size(56.dp).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
-                        TextButton(onClick = { imagenUri = null }) { Text("Quitar", color = MaterialTheme.colorScheme.error) }
+                        AsyncImage(
+                            model = imagenUri,
+                            contentDescription = "Imagen",
+                            modifier = Modifier.size(56.dp).clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                        TextButton(onClick = { imagenUri = null }) {
+                            Text("Quitar", color = MaterialTheme.colorScheme.error)
+                        }
                     } else {
-                        OutlinedButton(onClick = { imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) {
+                        OutlinedButton(
+                            onClick = { imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+                        ) {
                             Icon(Icons.Default.AddPhotoAlternate, contentDescription = null)
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(Modifier.width(4.dp))
                             Text("Elegir imagen")
                         }
                     }
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = fechaInicio, onValueChange = { fechaInicio = it }, label = { Text("Inicio (AAAA-MM-DD)") }, singleLine = true, modifier = Modifier.weight(1f), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant))
-                    OutlinedTextField(value = fechaFin, onValueChange = { fechaFin = it }, label = { Text("Fin (AAAA-MM-DD)") }, singleLine = true, modifier = Modifier.weight(1f), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant))
-                }
-
+                // ── Vigencia: día + hora en formato am/pm ──
                 Column {
-                    Text("Expiración (día y hora, opcional)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Fecha y hora de vencimiento",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(
                             onClick = {
-                                val cal = (expDiaMillis?.let { Calendar.getInstance().apply { timeInMillis = it } } ?: Calendar.getInstance())
+                                val cal = diaMillis?.let { Calendar.getInstance().apply { timeInMillis = it } }
+                                    ?: Calendar.getInstance()
                                 DatePickerDialog(
                                     context,
                                     { _, y, m, d ->
-                                        expDiaMillis = Calendar.getInstance().apply {
+                                        diaMillis = Calendar.getInstance().apply {
                                             set(y, m, d, 0, 0, 0)
                                             set(Calendar.MILLISECOND, 0)
                                         }.timeInMillis
@@ -252,70 +411,97 @@ fun CreatePromocionDialog(
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = colorScheme.primary)
                         ) {
                             Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(expDiaLabel, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                diaMillis?.let { formatDia(it) } ?: "Elegir fecha",
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
+
                         OutlinedButton(
                             onClick = {
-                                val default = expHoraMin ?: (12 * 60)
+                                // is24HourView = false → selector de 12 h con AM/PM.
                                 TimePickerDialog(
                                     context,
-                                    { _, h, m -> expHoraMin = h * 60 + m },
-                                    default / 60, default % 60, true
+                                    { _, h, m -> hora = h to m },
+                                    hora.first,
+                                    hora.second,
+                                    false
                                 ).show()
                             },
-                            enabled = expDiaMillis != null,
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = colorScheme.primary)
                         ) {
                             Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(expHoraLabel)
+                            Spacer(Modifier.width(6.dp))
+                            Text(formatHora12(hora.first, hora.second))
                         }
                     }
-                    if (expDiaMillis != null || expHoraMin != null) {
-                        TextButton(onClick = { expDiaMillis = null; expHoraMin = null }) { Text("Quitar expiración", color = MaterialTheme.colorScheme.error) }
+                    Text(
+                        "Si no eliges fecha, la promoción queda activa hasta que la desactives.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colorScheme.onSurfaceVariant
+                    )
+                    if (diaMillis != null) {
+                        TextButton(onClick = { diaMillis = null }) {
+                            Text("Quitar vencimiento", color = MaterialTheme.colorScheme.error)
+                        }
                     }
                 }
             }
         },
         confirmButton = {
-            Button(onClick = {
-                val limite: Long? = when {
-                    expDiaMillis != null && expHoraMin != null -> Calendar.getInstance().apply {
-                        timeInMillis = expDiaMillis!!
-                        set(Calendar.HOUR_OF_DAY, expHoraMin!! / 60)
-                        set(Calendar.MINUTE, expHoraMin!! % 60)
-                        set(Calendar.SECOND, 0)
-                        set(Calendar.MILLISECOND, 0)
-                    }.timeInMillis
-                    expDiaMillis != null -> Calendar.getInstance().apply {
-                        timeInMillis = expDiaMillis!!
-                        set(Calendar.HOUR_OF_DAY, 23)
-                        set(Calendar.MINUTE, 59)
-                        set(Calendar.SECOND, 59)
-                        set(Calendar.MILLISECOND, 999)
-                    }.timeInMillis
-                    else -> null
-                }
-                onConfirm(
-                    Promocion(
-                        id = 0,
-                        nombre = nombre.trim(),
-                        descripcion = descripcion.trim(),
-                        tipo = tipo,
-                        colorIndex = colorIndex,
-                        imagenUri = imagenUri?.toString(),
-                        fechaInicio = fechaInicio.ifBlank { null },
-                        fechaFin = fechaFin.ifBlank { null },
-                        expiracionMillis = limite,
-                        activa = true
+            Button(
+                onClick = {
+                    onConfirm(
+                        Promocion(
+                            id = inicial?.id ?: 0,
+                            nombre = nombre.trim(),
+                            descripcion = descripcion.trim(),
+                            tipo = tipo,
+                            colorIndex = colorIndex,
+                            imagenUri = imagenUri,
+                            // Sólo hay vencimiento si se escogió día.
+                            expiracionMillis = diaMillis?.let { buildExpiracionMillis(it, hora.first, hora.second) },
+                            activa = inicial?.activa ?: true
+                        )
                     )
-                )
-            },
+                },
                 enabled = nombre.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary, contentColor = colorScheme.onSecondary)) { Text("Crear", color = colorScheme.onSecondary) }
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorScheme.secondary,
+                    contentColor = colorScheme.onSecondary
+                )
+            ) {
+                Text(if (esEdicion) "Guardar cambios" else "Crear", color = colorScheme.onSecondary)
+            }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
     )
 }
+
+/** Minutos desde medianoche de un instante, para recuperar la hora al editar. */
+private fun minutoDelDia(millis: Long): Pair<Int, Int> {
+    val cal = Calendar.getInstance().apply { timeInMillis = millis }
+    return cal.get(Calendar.HOUR_OF_DAY) to cal.get(Calendar.MINUTE)
+}
+
+/** "25/06/2025" */
+private fun formatDia(millis: Long): String =
+    SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(millis))
+
+/** "09:05 AM" / "02:30 PM". */
+private fun formatHora12(hora24: Int, minuto: Int): String {
+    val suffix = if (hora24 < 12) "AM" else "PM"
+    val h12 = when {
+        hora24 % 12 == 0 -> 12
+        else -> hora24 % 12
+    }
+    return "%02d:%02d %s".format(h12, minuto, suffix)
+}
+
+private val TIPOS_PROMOCION = listOf("Descuento", "2x1", "Combo", "Personalizado")
+
+/** Hora por defecto cuando el usuario no escoge otra: 5:00 PM. */
+private val DEFAULT_HORA = 17 to 0

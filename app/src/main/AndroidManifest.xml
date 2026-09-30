@@ -27,7 +27,29 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- Deep link de restablecimiento de contraseña: kaffa://reset-password?token=..&correo=..
+                 Se declara en la actividad para que MainActivity pueda leer el enlace tanto
+                 en el arranque en frío como cuando la app ya está abierta (onNewIntent). -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kaffa" android:host="reset-password" />
+            </intent-filter>
         </activity>
+
+        <!-- Comparte los PDF generados con otras apps (correo, Drive, WhatsApp...)
+             a través del archivo almacenado en el directorio privado de reportes. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

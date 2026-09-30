@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Rutas privadas que el FileProvider puede compartir con otras apps.
+    "reportes" debe coincidir con el subdirectorio usado por ReportArchive
+    (ver data/local/ReportArchive.kt), de modo que el PDF pueda enviarse
+    por correo o guardarse en la nube sin copiarlo a una ruta pública.
+-->
+<paths>
+    <files-path name="reportes_internos" path="reportes/" />
+    <files-path name="archivos_internos" path="." />
+    <external-files-path name="reportes_app" path="Documents/reportes/" />
+    <external-files-path name="externos_app" path="." />
+    <cache-path name="cache_compartible" path="." />
+</paths>

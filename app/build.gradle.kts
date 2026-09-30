@@ -34,6 +34,9 @@ android {
     }
     buildFeatures {
         compose = true
+        // Necesario para usar BuildConfig.DEBUG: el interceptor de red sólo
+        // registra el cuerpo de las peticiones en debug (ver DebugInterceptor).
+        buildConfig = true
     }
 }
 

@@ -26,6 +26,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.kaffacafeteria.ui.admin.*
+import com.example.kaffacafeteria.ui.auth.ForgotPasswordScreen
+import com.example.kaffacafeteria.ui.auth.ForgotPasswordViewModel
 import com.example.kaffacafeteria.ui.auth.LoginScreen
 import com.example.kaffacafeteria.ui.auth.RegisterScreen
 import com.example.kaffacafeteria.ui.barista.BaristaPanelScreen
@@ -47,6 +49,7 @@ import com.example.kaffacafeteria.ui.pos.POSScreen
 import com.example.kaffacafeteria.ui.productos.ProductListScreen
 import com.example.kaffacafeteria.ui.profile.ProfileScreen
 import com.example.kaffacafeteria.ui.splash.SplashScreen
+import com.example.kaffacafeteria.util.createViewModel
 
 sealed class Screen(val route: String) {
     data object Splash : Screen("splash")
@@ -69,9 +72,11 @@ sealed class Screen(val route: String) {
     data object ManageProducts : Screen("admin/products")
     data object PaymentMethods : Screen("admin/payment_methods")
     data object Reports : Screen("admin/reports")
+    data object ArchivedReports : Screen("admin/reports_archivados")
     data object ReportDetail : Screen("admin/reports/{tipo}") {
         fun createRoute(tipo: String) = "admin/reports/$tipo"
     }
+    data object ForgotPassword : Screen("forgot_password")
     data object Caja : Screen("caja")
     data object Compras : Screen("compras")
     data object Mermas : Screen("mermas")
@@ -86,7 +91,9 @@ sealed class Screen(val route: String) {
 @Composable
 fun AppNavigation(
     darkTheme: Boolean,
-    onToggleTheme: (Boolean) -> Unit
+    onToggleTheme: (Boolean) -> Unit,
+    deepLink: com.example.kaffacafeteria.DeepLink? = null,
+    onDeepLinkHandled: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -95,6 +102,26 @@ fun AppNavigation(
 
     var isLoggedIn by remember { mutableStateOf(false) }
     var currentRole by remember { mutableStateOf<String?>(null) }
+
+    // El ViewModel de la pantalla de contraseña se conserva para que el token
+    // que llega por el deep link no se pierda al recomponer la pantalla.
+    val resetViewModel: ForgotPasswordViewModel = createViewModel { ForgotPasswordViewModel(it) }
+
+    // Token recibido por el enlace del correo: se guarda antes de navegar para
+    // que sobreviva cualquier recomposición de la pantalla de destino.
+    LaunchedEffect(deepLink) {
+        val link = deepLink ?: return@LaunchedEffect
+        if (link.destino == "reset_password") {
+            resetViewModel.precargarDesdeDeepLink(
+                token = link.argumentos["token"],
+                correo = link.argumentos["correo"]
+            )
+            navController.navigate(Screen.ForgotPassword.route) {
+                popUpTo(Screen.Splash.route) { inclusive = true }
+            }
+        }
+        onDeepLinkHandled()
+    }
 
     val clientBottomNavItems = remember {
         listOf(
@@ -184,7 +211,21 @@ fun AppNavigation(
                         val route = homeRouteFor(user)
                         navController.navigate(route) { popUpTo(Screen.Login.route) { inclusive = true } }
                     },
-                    onNavigateToRegister = { navController.navigate(Screen.Register.route) }
+                    onNavigateToRegister = { navController.navigate(Screen.Register.route) },
+                    onNavigateToForgotPassword = { navController.navigate(Screen.ForgotPassword.route) }
+                )
+            }
+
+            composable(Screen.ForgotPassword.route) {
+                ForgotPasswordScreen(
+                    onBack = { navController.popBackStack() },
+                    onResetSuccess = {
+                        // Tras restablecer la contraseña se vuelve al login limpio.
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(Screen.ForgotPassword.route) { inclusive = true }
+                        }
+                    },
+                    viewModel = resetViewModel
                 )
             }
 
@@ -192,9 +233,11 @@ fun AppNavigation(
                 RegisterScreen(
                     onBack = { navController.popBackStack() },
                     onRegisterSuccess = {
-                        isLoggedIn = true
-                        currentRole = "cliente"
-                        navController.navigate(Screen.Home.route) { popUpTo(0) { inclusive = true } }
+                        // El registro deja la cuenta pendiente de verificación:
+                        // el siguiente paso es iniciar sesión, no entrar al inicio.
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(Screen.Register.route) { inclusive = true }
+                        }
                     }
                 )
             }
@@ -298,7 +341,14 @@ fun AppNavigation(
             composable(Screen.Reports.route) {
                 ReportsScreen(
                     onBack = { navController.popBackStack() },
-                    onOpenReport = { tipo -> navController.navigate(Screen.ReportDetail.createRoute(tipo)) }
+                    onOpenReport = { tipo -> navController.navigate(Screen.ReportDetail.createRoute(tipo)) },
+                    onOpenArchived = { navController.navigate(Screen.ArchivedReports.route) }
+                )
+            }
+            composable(Screen.ArchivedReports.route) {
+                ArchivedReportsScreen(
+                    onBack = { navController.popBackStack() },
+                    esAdmin = currentRole == "admin"
                 )
             }
             composable(Screen.ReportDetail.route, arguments = listOf(navArgument("tipo") { type = NavType.StringType })) { backStackEntry ->
