@@ -1,6 +1,15 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+}
+
+// Credenciales de firma del release. Se leen de local.properties (ignorado por
+// git) para no subir el keystore ni las contraseñas al repositorio.
+val signingProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
 }
 
 android {
@@ -21,8 +30,26 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    val releaseStoreFile = signingProps.getProperty("RELEASE_STORE_FILE")
+        ?.let { rootProject.file(it) }
+        ?.takeIf { it.exists() }
+
+    signingConfigs {
+        if (releaseStoreFile != null) {
+            create("release") {
+                storeFile = releaseStoreFile
+                storePassword = signingProps.getProperty("RELEASE_STORE_PASSWORD")
+                keyAlias = signingProps.getProperty("RELEASE_KEY_ALIAS")
+                keyPassword = signingProps.getProperty("RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (releaseStoreFile != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             optimization {
                 enable = false
             }

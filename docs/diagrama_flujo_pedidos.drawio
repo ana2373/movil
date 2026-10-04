@@ -1,0 +1,440 @@
+<mxfile host="app.diagrams.net" agent="opencode" type="device" version="24.7.17">
+  <diagram id="pagina-1-capas" name="1. Panorama por capas">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="KAFFA &#8212; Flujo de conexi&#243;n: m&#243;dulo PEDIDOS (POST /pedidos)" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#1a237e;" vertex="1" parent="1">
+          <mxGeometry x="120" y="20" width="1420" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Android Kotlin + Jetpack Compose  &#8594;  Retrofit / OkHttp  &#8594;  API REST Laravel  &#8594;  MySQL" style="text;html=1;align=center;verticalAlign=middle;fontSize=15;fontColor=#455a64;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="120" y="58" width="1420" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="grpAndroid" value="APP ANDROID (Kotlin)&#10;movil-master" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;strokeWidth=2;dashed=0;verticalAlign=top;align=center;fontSize=16;fontStyle=1;fontColor=#0d47a1;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="100" width="660" height="800" as="geometry" />
+        </mxCell>
+        <mxCell id="grpServer" value="BACKEND LARAVEL (API REST externa)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#ef6c00;strokeWidth=2;dashed=1;verticalAlign=top;align=center;fontSize=16;fontStyle=1;fontColor=#e65100;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="960" y="100" width="650" height="800" as="geometry" />
+        </mxCell>
+        <mxCell id="grpNet" value="RED LAN" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#9e9e9e;verticalAlign=middle;align=center;fontSize=13;fontColor=#616161;" vertex="1" parent="1">
+          <mxGeometry x="730" y="100" width="200" height="800" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ui" value="1. UI &#8212; Jetpack Compose&#10;POSScreen.kt / OrderListScreen.kt&#10;&#10;El usuario pulsa &#8220;Cobrar&#8221;.&#10;Aqu&#237; NO hay llamada de red." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1976d2;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="140" width="600" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="vm" value="2. VIEWMODEL (MVVM)&#10;POSViewModel.createOrder()&#10;ui/pos/POSViewModel.kt:150&#10;&#10;Arma el PedidoRequest desde el CartStore:&#10;estado=&#8220;pendiente&#8221;, caja_id=null, detalles[], pagos[], factura" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1976d2;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="250" width="600" height="95" as="geometry" />
+        </mxCell>
+
+        <mxCell id="repo" value="3. REPOSITORY&#10;OrderRepositoryImpl.apiCall { ... }&#10;data/repository/OrderRepositoryImpl.kt:12&#10;&#10;Envuelve la llamada y devuelve Resource&lt;T&gt;:&#10;Loading | Success | Error" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1976d2;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="375" width="600" height="85" as="geometry" />
+        </mxCell>
+
+        <mxCell id="api" value="4. INTERFAZ RETROFIT&#10;OrderApi &#8212; data/remote/api/OrderApi.kt&#10;&#10;@GET(&#8220;pedidos&#8221;)  @GET(&#8220;pedidos/{id}&#8221;)&#10;@POST(&#8220;pedidos&#8221;)  @PUT / @DELETE&#10;&#10;DTOs: OrderDtos.kt + CommonDtos.kt (PaginatedResponse)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1976d2;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="490" width="600" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="inter" value="5. INTERCEPTORES OKHTTP&#10;KaffaApp.kt:25&#10;&#10;AuthInterceptor &#8594; Authorization: Bearer &lt;JWT&gt;&#10;DebugInterceptor &#8594; log BODY (solo debug, redacta el token)&#10;Timeouts 30s &#183; GsonConverterFactory" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1976d2;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="620" width="600" height="95" as="geometry" />
+        </mxCell>
+
+        <mxCell id="url" value="6. BASE URL&#10;util/Constants.kt:14&#10;&#10;Emulador:  http://10.0.2.2:8000/api/v1/&#10;Celular f&#237;sico:  http://192.168.80.15:8000/api/v1/&#10;&#10;AndroidManifest.xml: usesCleartextTraffic=&#8220;true&#8221;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1976d2;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="745" width="600" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="routes" value="7. RUTAS + MIDDLEWARE&#10;routes/api.php &#8594; /pedidos&#10;auth:sanctum&#10;&#10;Lee Authorization: Bearer,&#10;resuelve el usuario o 401" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="990" y="140" width="590" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ctrl" value="8. CONTROLLER&#10;PedidoController@store&#10;&#10;$request-&gt;validate([...])&#10;&#10;Si falla &#8594; 422 con&#10;{&#8220;message&#8221;,&#8220;errors&#8221;:{...}}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="990" y="260" width="590" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="svc" value="9. SERVICIO / REGLAS DE NEGOCIO&#10;PedidoService-&gt;crear()&#10;&#10;&#8226; &#191;Hay caja ABIERTA?      &#8594; si no: CAJA_CERRADA&#10;&#8226; &#191;Barista con TURNO ACTIVO?&#10;&#8226; Resuelve la caja abierta (el cliente env&#237;a caja_id=null)&#10;&#8226; DB::transaction + lockForUpdate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="990" y="380" width="590" height="105" as="geometry" />
+        </mxCell>
+
+        <mxCell id="models" value="10. MODELOS ELOQUENT&#10;Pedido &#183; PedidoDetalle &#183; PagoPedido &#183; FacturaVenta&#10;&#10;INSERT pedidos&#10;INSERT pedido_detalles&#10;INSERT pago_pedidos&#10;INSERT factura_ventas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="990" y="515" width="590" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db" value="11. BASE DE DATOS&#10;MySQL / MariaDB&#10;&#10;pedidos&#10;pedido_detalles&#10;pago_pedidos &#183; factura_ventas" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#ffffff;strokeColor=#2e7d32;fontSize=12;fontStyle=0;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="645" width="180" height="180" as="geometry" />
+        </mxCell>
+
+        <mxCell id="resource" value="12. RESOURCE / TRANSFORMER&#10;PedidoResource-&gt;toArray()&#10;&#10;Convierte el modelo a JSON con&#10;las claves que el DTO espera&#10;(&#8220;cliente_id&#8221;,&#8221;medio_pago_id&#8221;,&#8221;created_at&#8221;...)&#10;y los montos como STRING" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="990" y="660" width="200" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1976d2;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="ui" target="vm">
+          <mxGeometry relative="1" as="geometry" />
+          <mxPoint as="offset" x="0" y="-3" />
+        </mxCell>
+        <mxCell id="e2" value="orderApi.createPedido(request)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1976d2;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="vm" target="repo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="suspend fun ..." style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1976d2;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="repo" target="api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="Gson: Kotlin object &#8596; JSON" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1976d2;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="api" target="inter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="interceptor chain" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1976d2;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="inter" target="url">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e6" value="HTTP POST&#10;/api/v1/pedidos&#10;Authorization: Bearer &lt;JWT&gt;&#10;Accept: application/json" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#c62828;strokeWidth=4;endArrow=block;endFill=1;fontSize=12;fontStyle=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="url" target="routes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ef6c00;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="routes" target="ctrl">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ef6c00;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="ctrl" target="svc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ef6c00;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="svc" target="models">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" value="queries" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="models" target="db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" value="Eloquent" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="db" target="resource">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e12" value="200 / 201 Created&#10;{&#8220;data&#8221;:{&#8220;id&#8221;:348,&#8220;total&#8221;:&#8220;45.50&#8221;,&#8220;estado&#8221;:&#8220;pendiente&#8221;...},&#10;&#8220;message&#8221;:&#8220;Pedido creado correctamente&#8221;}" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=4;endArrow=block;endFill=1;fontSize=12;fontStyle=1;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;exitDx=0;exitDy=0;dashed=1;" edge="1" parent="1" source="resource" target="inter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="note" value="VUELTA: Gson &#8594; Response&lt;PedidoDto&gt; &#8594; Resource.Success &#8594; POSViewModel actualiza uiState &#8594; Compose recompone (muestra el comprobante y vac&#237;a el carrito)." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="855" width="600" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=block;endFill=1;dashed=1;exitX=0.5;exitY=0;" edge="1" parent="1" source="inter" target="repo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="pagina-2-secuencia" name="2. Secuencia POST /pedidos">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="t2" value="Secuencia completa: el barista cobra un pedido (POST /api/v1/pedidos)" style="text;html=1;align=center;fontSize=22;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#1a237e;" vertex="1" parent="1">
+          <mxGeometry x="120" y="20" width="1420" height="35" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lif0" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1976d2;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="290" width="160" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="lif1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1976d2;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="265" y="290" width="160" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="lif2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1976d2;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="490" y="290" width="160" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="lif3" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9e9e9e;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="715" y="290" width="160" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="lif4" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c62828;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="940" y="290" width="160" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="lif5" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1165" y="290" width="160" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="lif6" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2e7d32;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1390" y="290" width="160" height="700" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p0" value="USUARIO&#10;(barista)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="160" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p1" value="POSScreen&#10;(Compose)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="265" y="160" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p2" value="POSViewModel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="490" y="160" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p3" value="Retrofit +&#10;OkHttp&#10;(interceptor)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#607d8b;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="715" y="160" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p4" value="PedidoController&#10;+ PedidoService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#ef6c00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="940" y="160" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p5" value="Modelos&#10;Eloquent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#ef6c00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1165" y="160" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p6" value="MySQL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1390" y="160" width="160" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a0" style="edgeStyle=none;html=1;strokeColor=#607d8b;endArrow=open;dashed=1;" edge="1" parent="1" source="p0" target="lif0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" style="edgeStyle=none;html=1;strokeColor=#607d8b;endArrow=open;dashed=1;" edge="1" parent="1" source="p1" target="lif1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" style="edgeStyle=none;html=1;strokeColor=#607d8b;endArrow=open;dashed=1;" edge="1" parent="1" source="p2" target="lif2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" style="edgeStyle=none;html=1;strokeColor=#607d8b;endArrow=open;dashed=1;" edge="1" parent="1" source="p3" target="lif3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a4" style="edgeStyle=none;html=1;strokeColor=#607d8b;endArrow=open;dashed=1;" edge="1" parent="1" source="p4" target="lif4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a5" style="edgeStyle=none;html=1;strokeColor=#607d8b;endArrow=open;dashed=1;" edge="1" parent="1" source="p5" target="lif5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a6" style="edgeStyle=none;html=1;strokeColor=#607d8b;endArrow=open;dashed=1;" edge="1" parent="1" source="p6" target="lif6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="m1" value="1. Pulsa &#8220;Cobrar&#8221;" style="edgeStyle=none;html=1;strokeColor=#37474f;strokeWidth=2;endArrow=block;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="lif0" target="lif1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="320" as="sourcePoint" />
+            <mxPoint x="265" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2" value="2. onClick &#8594; createOrder()" style="edgeStyle=none;html=1;strokeColor=#37474f;strokeWidth=2;endArrow=block;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="lif1" target="lif2">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="425" y="375" as="sourcePoint" />
+            <mxPoint x="490" y="375" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3" value="3. Valida medio de pago; si es virtual exige comprobanteUrl&#10;4. Convierte CartStore en PedidoRequest (estado=&#8220;pendiente&#8221;, caja_id=null)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1976d2;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="530" y="415" width="480" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="m4" value="5. viewModelScope.launch { orderApi.createPedido(request) }&#10;&#8594; corrutina: la UI NO se bloquea" style="edgeStyle=none;html=1;strokeColor=#37474f;strokeWidth=2;endArrow=block;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="lif2" target="lif3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="600" y="540" />
+              <mxPoint x="715" y="540" />
+            </Array>
+            <mxPoint x="650" y="540" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5" value="6. AuthInterceptor: runBlocking { tokenManager.getToken() }&#10;+ header Authorization: Bearer &lt;JWT&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#607d8b;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="755" y="585" width="470" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m6" value="7. HTTP POST /api/v1/pedidos &#10;{cliente_id, total, estado, detalles[], pagos[], factura}" style="edgeStyle=none;html=1;strokeColor=#c62828;strokeWidth=3;endArrow=block;fontSize=12;fontStyle=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="lif3" target="lif4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="875" y="700" as="sourcePoint" />
+            <mxPoint x="940" y="700" as="targetPoint" />
+            <mxPoint x="907" y="688" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m7" value="8. auth:sanctum resuelve el usuario&#10;9. PedidoController@store: $request-&gt;validate(...)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="755" y="745" width="470" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="m8" value="10. PedidoService-&gt;crear():&#10;&#191;caja abierta? &#191;turno activo? &#8594; si no, error CAJA_CERRADA" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ef6c00;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="755" y="810" width="470" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m9" value="11. INSERT pedidos + pedido_detalles + pago_pedidos + factura_ventas&#10;(dentro de DB::transaction, lockForUpdate en cajas)" style="edgeStyle=none;html=1;strokeColor=#2e7d32;strokeWidth=3;endArrow=block;fontSize=12;fontStyle=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="lif4" target="lif5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1100" y="900" as="sourcePoint" />
+            <mxPoint x="1165" y="900" as="targetPoint" />
+            <mxPoint x="1132" y="888" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m10" value="12. id generado (lastInsertId)" style="edgeStyle=none;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=open;dashed=1;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="lif6" target="lif5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1470" y="950" as="sourcePoint" />
+            <mxPoint x="1325" y="950" as="targetPoint" />
+            <mxPoint x="1397" y="938" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m11" value="13. HTTP 201 Created&#10;{&#8220;data&#8221;:{&#8220;id&#8221;:348,&#8220;total&#8221;:&#8220;45.50&#8221;,&#8220;estado&#8221;:&#8220;pendiente&#8221;,&#8220;caja_id&#8221;:2,...}}" style="edgeStyle=none;html=1;strokeColor=#2e7d32;strokeWidth=3;endArrow=block;dashed=1;fontSize=12;fontStyle=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="lif4" target="lif3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="940" y="1000" as="sourcePoint" />
+            <mxPoint x="875" y="1000" as="targetPoint" />
+            <mxPoint x="780" y="985" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m12" value="14. Response&lt;PedidoDto&gt; &#8594; Resource.Success&#10;DebugInterceptor loguea la respuesta" style="edgeStyle=none;html=1;strokeColor=#37474f;strokeWidth=2;endArrow=block;dashed=1;fontSize=12;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="lif3" target="lif2">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="715" y="1060" as="sourcePoint" />
+            <mxPoint x="650" y="1060" as="targetPoint" />
+            <mxPoint x="555" y="1045" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m13" value="15. uiState = uiState.copy(showPaymentSuccess = true, createdOrderId = 348)&#10;cartStore.clear()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1976d2;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="300" y="1080" width="500" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="m14" value="16. Compone la pantalla: muestra el comprobante y vac&#237;a el carrito" style="edgeStyle=none;html=1;strokeColor=#2e7d32;strokeWidth=3;endArrow=block;fontSize=12;fontStyle=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="lif1" target="lif0">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="265" y="1150" as="sourcePoint" />
+            <mxPoint x="200" y="1150" as="targetPoint" />
+            <mxPoint x="105" y="1135" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="errBox" value="CAMINO DE ERROR&#10;&#8226; Si falla validate() &#8594; 422 {&#8220;message&#8221;,&#8220;errors&#8221;:{&#8220;total&#8221;:[&#8220;El total es requerido&#8221;]}}&#10;&#8226; Si falla una regla &#8594; {&#8220;message&#8221;:&#8220;La caja est&#225; cerrada&#8221;,&#8220;code&#8221;:&#8220;CAJA_CERRADA&#8221;}&#10;&#8226; Sin red &#8594; catch (e: Exception) &#8594; &#8220;Error de conexi&#243;n&#8221;&#10;&#10;BUG: OrderRepositoryImpl.apiCall (l&#237;nea 40) descarta el cuerpo del error&#10;y devuelve &#8220;Error en la petici&#243;n&#8221;: los c&#243;digos del backend&#10;nunca llegan a las pantallas de pedidos." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffebee;strokeColor=#c62828;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;fontStyle=0;" vertex="1" parent="1">
+          <mxGeometry x="1165" y="160" width="385" height="270" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="pagina-3-estados" name="3. Endpoints, estados y roles">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="t3" value="Contrato de la API, m&#225;quina de estados y qui&#233;n consume qu&#233;" style="text;html=1;align=center;fontSize=22;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#1a237e;" vertex="1" parent="1">
+          <mxGeometry x="120" y="20" width="1420" height="35" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tbl" value="" style="shape=table;html=1;startRow=1;startCol=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowHeight=1;container=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="820" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="tr1" style="shape=tableRow;html=1;collapsible=0;" vertex="1" parent="tbl">
+          <mxGeometry width="820" height="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tr2" style="shape=tableRow;html=1;collapsible=0;" vertex="1" parent="tbl">
+          <mxGeometry y="1" width="820" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="tr3" style="shape=tableRow;html=1;collapsible=0;" vertex="1" parent="tbl">
+          <mxGeometry y="41" width="820" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="tr4" style="shape=tableRow;html=1;collapsible=0;" vertex="1" parent="tbl">
+          <mxGeometry y="79" width="820" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="tr5" style="shape=tableRow;html=1;collapsible=0;" vertex="1" parent="tbl">
+          <mxGeometry y="117" width="820" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="tr6" style="shape=tableRow;html=1;collapsible=0;" vertex="1" parent="tbl">
+          <mxGeometry y="155" width="820" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="tr7" style="shape=tableRow;html=1;collapsible=0;" vertex="1" parent="tbl">
+          <mxGeometry y="193" width="820" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="th1" value="M&#233;todo" style="shape=tableCell;html=1;fillColor=#1a237e;fontColor=#ffffff;fontStyle=1;fontSize=13;" vertex="1" parent="tr2">
+          <mxGeometry width="90" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="th2" value="URL (base = Constants.BASE_URL)" style="shape=tableCell;html=1;fillColor=#1a237e;fontColor=#ffffff;fontStyle=1;fontSize=13;" vertex="1" parent="tr2">
+          <mxGeometry x="90" width="330" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="th3" value="Request / Response" style="shape=tableCell;html=1;fillColor=#1a237e;fontColor=#ffffff;fontStyle=1;fontSize=13;" vertex="1" parent="tr2">
+          <mxGeometry x="420" width="250" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="th4" value="Qui&#233;n lo usa" style="shape=tableCell;html=1;fillColor=#1a237e;fontColor=#ffffff;fontStyle=1;fontSize=13;" vertex="1" parent="tr2">
+          <mxGeometry x="670" width="150" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="r1c1" value="GET" style="shape=tableCell;html=1;fillColor=#e3f2fd;fontStyle=1;fontSize=12;" vertex="1" parent="tr3">
+          <mxGeometry width="90" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r1c2" value="/api/v1/pedidos?per_page=15&amp;estado=&amp;sort_by=&amp;sort_order=" style="shape=tableCell;html=1;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="tr3">
+          <mxGeometry x="90" width="330" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r1c3" value="PaginatedResponse&lt;PedidoDto&gt;&#10;{data:[...], meta:{current_page,...}}" style="shape=tableCell;html=1;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="tr3">
+          <mxGeometry x="420" width="250" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r1c4" value="OrderListScreen&#10;BaristaPanel (poll 8 s)" style="shape=tableCell;html=1;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="tr3">
+          <mxGeometry x="670" width="150" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r2c1" value="GET" style="shape=tableCell;html=1;fillColor=#e3f2fd;fontStyle=1;fontSize=12;" vertex="1" parent="tr4">
+          <mxGeometry width="90" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r2c2" value="/api/v1/pedidos/{id}" style="shape=tableCell;html=1;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="tr4">
+          <mxGeometry x="90" width="330" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r2c3" value="PedidoDto" style="shape=tableCell;html=1;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="tr4">
+          <mxGeometry x="420" width="250" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r2c4" value="OrderDetailScreen" style="shape=tableCell;html=1;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="tr4">
+          <mxGeometry x="670" width="150" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r3c1" value="POST" style="shape=tableCell;html=1;fillColor=#e8f5e9;fontStyle=1;fontSize=12;" vertex="1" parent="tr5">
+          <mxGeometry width="90" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r3c2" value="/api/v1/pedidos" style="shape=tableCell;html=1;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="tr5">
+          <mxGeometry x="90" width="330" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r3c3" value="PedidoRequest &#8594; PedidoDto&#10;201 Created" style="shape=tableCell;html=1;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="tr5">
+          <mxGeometry x="420" width="250" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r3c4" value="POSViewModel:204&#10;ClientViewModel:181" style="shape=tableCell;html=1;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="tr5">
+          <mxGeometry x="670" width="150" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r4c1" value="PUT" style="shape=tableCell;html=1;fillColor=#e3f2fd;fontStyle=1;fontSize=12;" vertex="1" parent="tr6">
+          <mxGeometry width="90" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r4c2" value="/api/v1/pedidos/{id}" style="shape=tableCell;html=1;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="tr6">
+          <mxGeometry x="90" width="330" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r4c3" value="PedidoUpdateRequest{estado, barista_id}&#10;&#8594; PedidoDto" style="shape=tableCell;html=1;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="tr6">
+          <mxGeometry x="420" width="250" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r4c4" value="OrderViewModel:124&#10;BaristaPanelViewModel:142" style="shape=tableCell;html=1;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="tr6">
+          <mxGeometry x="670" width="150" height="37" as="geometry" />
+        </mxCell>
+        <mxCell id="r5c1" value="DELETE" style="shape=tableCell;html=1;fillColor=#e3f2fd;fontStyle=1;fontSize=12;" vertex="1" parent="tr7">
+          <mxGeometry width="90" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="r5c2" value="/api/v1/pedidos/{id}" style="shape=tableCell;html=1;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="tr7">
+          <mxGeometry x="90" width="330" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="r5c3" value="Response&lt;Any&gt;" style="shape=tableCell;html=1;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="tr7">
+          <mxGeometry x="420" width="250" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="r5c4" value="OrderViewModel" style="shape=tableCell;html=1;align=left;spacingLeft=6;fontSize=11;" vertex="1" parent="tr7">
+          <mxGeometry x="670" width="150" height="35" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s1" value="&#8226;&#8226;&#8226;&#8226; ESTADO &#8226;&#8226;&#8226;&#8226;" style="text;html=1;align=left;fontSize=14;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#1a237e;" vertex="1" parent="1">
+          <mxGeometry x="40" y="340" width="300" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="st1" value="pendiente&#10;(se crea as&#237;)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#f9a825;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="375" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="st2" value="pagado" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="375" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="st3" value="en_preparacion" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8eaf6;strokeColor=#3949ab;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="375" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="st4" value="entregado&#10;(&#250;nico que suma&#10;ingreso)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="670" y="375" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="st5" value="cancelado" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffebee;strokeColor=#c62828;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="880" y="375" width="150" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sa1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#37474f;strokeWidth=2;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="st1" target="st2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sa2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#37474f;strokeWidth=2;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="st2" target="st3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sa3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#37474f;strokeWidth=2;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="st3" target="st4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sa4" value="PUT en cualquier momento" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#c62828;strokeWidth=2;dashed=1;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="st1" target="st5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="stnote" value="Cada transici&#243;n es un PUT /api/v1/pedidos/{id}&#10;con PedidoUpdateRequest(estado = nuevoEstado).&#10;&#10;Transiciones en la UI: ui/orders/OrderDetailScreen.kt:104-110&#10;Kanban del barista (BaristaPanelScreen.kt:263-265):&#10;&#160;&#160;&#8226; pendiente | pagado &#8594; columna 1&#160;&#160;&#8226; en_preparacion &#8594; columna 2&#160;&#160;&#8226; entregado | cancelado &#8594; columna 3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#9e9e9e;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="460" width="990" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="roles" value="QUI&#201;N TOCA QU&#201;|&#10;&#10;&#8226; POSScreen / ClientScreen &#8212; POST (crean el pedido)&#10;&#8226; BaristaPanelViewModel &#8212; GET cada 8 s + PUT (marcar en preparaci&#243;n / listo / pagado)&#10;&#8226; OrderViewModel &#8212; GET, GET por id, PUT, DELETE&#10;&#8226; AdminDashboardViewModel / ReportDetailViewModel &#8212; GET con per_page=1000 y KPIs calculados EN EL CLIENTE&#10;&#10;DOS CAMINOS A LA API (problema de consistencia):&#10;&#8226; Con Repository: OrderViewModel, BaristaPanelViewModel &#8594; Resource&lt;T&gt;, error gen&#233;rico&#10;&#8226; API directa: POSViewModel, ClientViewModel, admin &#8594; isSuccessful / code(), error &#8220;Error al crear pedido: 500&#8221;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0277bd;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="80" width="550" height="490" as="geometry" />
+        </mxCell>
+
+        <mxCell id="warn" value="PARA LA PRESENTACI&#211;N &#8212; 3 Ideas fuerza&#10;&#10;1) La URL no est&#225; en un .env: est&#225; hardcodeada en util/Constants.kt. La app solo funciona en esa red LAN.&#10;&#10;2) El cliente env&#237;a total, precio_unitario y numero_factura calculados por el celular. El backend DEBER&#205;A recalcularlos y no confiar en el cliente.&#10;&#10;3) La IP 10.0.2.2 es el alias especial del emulador Android hacia el localhost de la PC; en un celular f&#237;sico hay que poner la IP real de la m&#225;quina (192.168.80.15) y estar en la misma WiFi." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffde7;strokeColor=#f9a825;fontSize=12;align=left;verticalAlign=middle;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="600" width="990" height="200" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

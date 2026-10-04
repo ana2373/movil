@@ -13,3 +13,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Keystore de firma del release (nunca subir al repositorio)
+*.jks
+*.keystore
+/entrega
