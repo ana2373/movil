@@ -18,6 +18,15 @@ class AuthInterceptor(private val tokenManager: TokenManager) : Interceptor {
                 .addHeader("Accept", "application/json")
                 .build()
         }
-        return chain.proceed(request)
+        val response = chain.proceed(request)
+
+        // 401 con token adjunto = sesión vencida o inválida: se borra el token y
+        // se avisa a la UI para que lleve al usuario al login. Si no había token
+        // (p. ej. login con credenciales incorrectas), no se hace nada.
+        if (response.code == 401 && token != null) {
+            runBlocking { tokenManager.deleteToken() }
+            tokenManager.notificarSesionExpirada()
+        }
+        return response
     }
 }

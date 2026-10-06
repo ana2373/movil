@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName
 data class TurnoDto(
     val id: Int,
     val fecha: String,
+    @SerializedName("fecha_fin") val fechaFin: String? = null,
     val tipo: String,
     val baristas: List<UsuarioFullDto>? = null,
     val created_at: String?,
@@ -17,12 +18,14 @@ data class TurnoResponse(
 
 data class TurnoRequest(
     val fecha: String,
+    @SerializedName("fecha_fin") val fechaFin: String,
     val tipo: String,
     @SerializedName("barista_ids") val baristaIds: List<Int>
 )
 
 data class TurnoUpdateRequest(
     val fecha: String? = null,
+    @SerializedName("fecha_fin") val fechaFin: String? = null,
     val tipo: String? = null,
     @SerializedName("barista_ids") val baristaIds: List<Int>? = null
 )
@@ -31,6 +34,7 @@ data class TurnoUpdateRequest(
 data class TurnoInfoDto(
     val id: Int? = null,
     val fecha: String? = null,
+    @SerializedName("fecha_fin") val fechaFin: String? = null,
     val tipo: String? = null,
     @SerializedName("hora_inicio") val horaInicio: String? = null,
     @SerializedName("hora_fin") val horaFin: String? = null,

@@ -346,7 +346,10 @@ fun AddBaristaDialog(
     var correo by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var selectedRoleIds by remember { mutableStateOf(setOf<Int>()) }
+    // El diálogo es de "Agregar Barista": el rol barista queda preseleccionado.
+    var selectedRoleIds by remember(roles) {
+        mutableStateOf(roles.firstOrNull { it.nombre.equals("barista", ignoreCase = true) }?.let { setOf(it.id) } ?: emptySet())
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,

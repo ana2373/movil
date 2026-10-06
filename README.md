@@ -210,6 +210,55 @@ El artefacto se genera en `app/build/outputs/apk/`.
 
 > El APK de release se construye **sin optimización** (`optimization { enable = false }`): no se aplica R8/ProGuard, por lo que el binario no está reducido ni ofuscado.
 
+### Firma del APK de release
+
+Un APK sin firmar no se puede instalar. Para que `assembleRelease` produzca un APK instalable hay que tener un keystore local y credenciales en `local.properties` (ambos ignorados por git):
+
+```properties
+RELEASE_STORE_FILE=kaffa-release.jks
+RELEASE_STORE_PASSWORD=<contraseña>
+RELEASE_KEY_ALIAS=kaffa
+RELEASE_KEY_PASSWORD=<contraseña>
+```
+
+Si `RELEASE_STORE_FILE` no apunta a un archivo existente, `signingConfig` se omite y el build de release sale **sin firmar** (útil en CI, inválido para entregar).
+
+Generar un keystore nuevo:
+
+```bash
+keytool -genkeypair -v -keystore kaffa-release.jks -storetype PKCS12 \
+  -alias kaffa -keyalg RSA -keysize 2048 -validity 10000
+```
+
+> **Guarda el keystore y las contraseñas fuera del repositorio y no las pierdas**: sin ese keystore no se puede publicar una actualización de la app con la misma identidad de firma. Los datos de la clave actual están en [`docs/CREDENCIALES-FIRMA.md`](docs/CREDENCIALES-FIRMA.md).
+
+### Configuración del backend
+
+El host del backend se compila dentro del APK y se lee de `local.properties`, así que no hay que tocar código para cambiarlo:
+
+```properties
+# Vacío = detección automática
+KAFFA_API_HOST=192.168.80.15
+```
+
+- **Vacío (por defecto):** `10.0.2.2` en emulador, `192.168.80.15` en celular físico.
+- **Con valor:** se usa tal cual (`host:puerto` si se incluye el puerto; por defecto `8000`).
+
+El valor llega al código como `BuildConfig.API_HOST` y lo consume `util/Constants.kt`. Tras cambiarlo hay que recompilar el APK.
+
+### Entrega del APK
+
+Los APKs listos para subir a Classroom se copian en `entrega/` (ignorada por git):
+
+| Archivo | Descripción |
+|---|---|
+| `KaffaCafeteria-v1.0-release.apk` | Release firmado — **este es el que se sube** |
+| `KaffaCafeteria-v1.0-debug.apk` | Variante debug, incluye los logs de red |
+
+**No subir `app-debug-androidTest.apk`**: es el APK de los tests instrumentados, no de la app.
+
+> Ojo: la app apunta a una IP local (`http://192.168.80.15:8000/api/v1/`). Quien instale el APK debe ejecutar el backend en esa dirección —usa la misma red Wi-Fi— para que la app funcione. Si el backend está en otra máquina, cambia `KAFFA_API_HOST` y recompila.
+
 ## Testing
 
 - `ExampleUnitTest.kt` — test unitario JUnit trivial de ejemplo.

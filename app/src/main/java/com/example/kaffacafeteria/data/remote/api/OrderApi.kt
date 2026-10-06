@@ -8,6 +8,7 @@ interface OrderApi {
     @GET("pedidos")
     suspend fun getPedidos(
         @Query("per_page") perPage: Int? = null,
+        @Query("page") page: Int? = null,
         @Query("estado") estado: String? = null,
         @Query("sort_by") sortBy: String? = null,
         @Query("sort_order") sortOrder: String? = null

@@ -10,7 +10,7 @@ import com.example.kaffacafeteria.KaffaApp
 import com.example.kaffacafeteria.data.remote.api.OrderApi
 import com.example.kaffacafeteria.data.remote.api.UserApi
 import com.example.kaffacafeteria.data.remote.dto.PedidoDto
-import com.example.kaffacafeteria.data.remote.dto.UsuarioFullDto
+import com.example.kaffacafeteria.util.fetchAllPages
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -48,11 +48,10 @@ class AdminDashboardViewModel(application: Application) : AndroidViewModel(appli
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, error = null)
             try {
-                val pedidosResp = orderApi.getPedidos(perPage = 1000)
-                val usuariosResp = userApi.getUsuarios(perPage = 1000)
-
-                val pedidos = pedidosResp.body()?.data ?: emptyList()
-                val usuarios = usuariosResp.body()?.data ?: emptyList()
+                // El backend limita per_page a 100: hay que recorrer las páginas
+                // o los KPIs salen calculados sobre la primera página solamente.
+                val pedidos = fetchAllPages { page -> orderApi.getPedidos(perPage = 100, page = page) }
+                val usuarios = fetchAllPages { page -> userApi.getUsuarios(perPage = 100, page = page) }
 
                 val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Calendar.getInstance().time)
 

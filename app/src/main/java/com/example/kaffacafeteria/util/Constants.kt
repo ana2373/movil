@@ -1,6 +1,7 @@
 package com.example.kaffacafeteria.util
 
 import android.os.Build
+import com.example.kaffacafeteria.BuildConfig
 
 object Constants {
     private val isEmulator: Boolean =
@@ -14,10 +15,15 @@ object Constants {
 
     private const val HOST_EMULATOR = "10.0.2.2"
     private const val HOST_PHYSICAL = "192.168.80.15"
-    private val host: String = if (isEmulator) HOST_EMULATOR else HOST_PHYSICAL
+    private const val PORT = 8000
 
-    val BASE_URL: String = "http://$host:8000/api/v1/"  // Celular fisico -> IP de la PC
-    val IMAGE_BASE_URL: String = "http://$host:8000/"
+    /** Anfitrión del backend. Configurable con KAFFA_API_HOST en local.properties. */
+    private val host: String = BuildConfig.API_HOST.ifBlank {
+        if (isEmulator) HOST_EMULATOR else HOST_PHYSICAL
+    }
+
+    val BASE_URL: String = "http://$host:$PORT/api/v1/"
+    val IMAGE_BASE_URL: String = "http://$host:$PORT/"
 
     const val PREF_NAME = "kaffa_prefs"
     const val TOKEN_KEY = "auth_token"

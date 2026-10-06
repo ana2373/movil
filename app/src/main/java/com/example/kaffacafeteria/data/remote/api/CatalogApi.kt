@@ -52,6 +52,7 @@ interface CatalogApi {
     @GET("insumos")
     suspend fun getInsumos(
         @Query("per_page") perPage: Int? = null,
+        @Query("page") page: Int? = null,
         @Query("nombre") nombre: String? = null
     ): Response<PaginatedResponse<InsumoDto>>
 

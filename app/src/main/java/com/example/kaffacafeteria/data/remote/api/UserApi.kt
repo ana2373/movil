@@ -8,6 +8,7 @@ interface UserApi {
     @GET("usuarios")
     suspend fun getUsuarios(
         @Query("per_page") perPage: Int? = null,
+        @Query("page") page: Int? = null,
         @Query("nombre") nombre: String? = null
     ): Response<PaginatedResponse<UsuarioFullDto>>
 
@@ -27,5 +28,5 @@ interface UserApi {
     suspend fun deleteUsuario(@Path("id") id: Int): Response<Any>
 
     @GET("roles")
-    suspend fun getRoles(): Response<List<RolFullDto>>
+    suspend fun getRoles(): Response<PaginatedResponse<RolFullDto>>
 }

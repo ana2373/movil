@@ -4,7 +4,9 @@ import com.example.kaffacafeteria.data.remote.api.CatalogApi
 import com.example.kaffacafeteria.data.remote.dto.*
 import com.example.kaffacafeteria.domain.model.MedioPago
 import com.example.kaffacafeteria.domain.repository.CatalogRepository
+import com.example.kaffacafeteria.util.ApiErrors
 import com.example.kaffacafeteria.util.Resource
+import com.example.kaffacafeteria.util.emptyBody
 
 class CatalogRepositoryImpl(
     private val catalogApi: CatalogApi
@@ -56,7 +58,7 @@ class CatalogRepositoryImpl(
                     MedioPago(it.id, it.nombre, it.esVirtual, it.activo)
                 } ?: emptyList())
             } else {
-                Resource.Error("Error al obtener medios de pago", response.code())
+                Resource.Error(ApiErrors.parse(response, "Error al obtener medios de pago"), response.code())
             }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Error de conexión")
@@ -79,9 +81,15 @@ class CatalogRepositoryImpl(
         return try {
             val response = call()
             if (response.isSuccessful) {
-                Resource.Success(response.body()!!)
+                // 2xx sin cuerpo (típico en DELETE/204): no hay nada que mapear
+                response.body()?.let { Resource.Success(it) }
+                    ?: Resource.Success(emptyBody())
             } else {
-                Resource.Error("Error en la petición", response.code())
+                Resource.Error(
+                    ApiErrors.parse(response, "Error en la petición"),
+                    response.code(),
+                    ApiErrors.code(response)
+                )
             }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Error de conexión")

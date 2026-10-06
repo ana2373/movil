@@ -7,6 +7,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.kaffacafeteria.util.Constants
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -21,6 +23,18 @@ class TokenManager(private val context: Context) {
 
     val tokenFlow: Flow<String?> = context.dataStore.data.map { prefs ->
         prefs[TOKEN_KEY]
+    }
+
+    /**
+     * Se emite cuando el backend rechaza el token (401): la sesión ya no es
+     * válida y la UI debe devolver al usuario al login.
+     * `extraBufferCapacity` + `tryEmit` permiten emitirlo desde el hilo de OkHttp.
+     */
+    private val _sesionExpirada = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val sesionExpirada: SharedFlow<Unit> = _sesionExpirada
+
+    fun notificarSesionExpirada() {
+        _sesionExpirada.tryEmit(Unit)
     }
 
     suspend fun getToken(): String? {

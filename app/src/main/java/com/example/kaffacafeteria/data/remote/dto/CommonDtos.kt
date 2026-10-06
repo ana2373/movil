@@ -11,7 +11,7 @@ data class MetaData(
     @SerializedName("current_page") val currentPage: Int,
     @SerializedName("last_page") val lastPage: Int,
     val total: Int,
-    val perPage: Int?
+    @SerializedName("per_page") val perPage: Int?
 )
 
 data class CategoriaDto(

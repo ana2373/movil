@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kaffacafeteria.KaffaApp
 import com.example.kaffacafeteria.data.remote.dto.*
+import com.example.kaffacafeteria.util.ApiErrors
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import retrofit2.Response
@@ -63,7 +64,7 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val response = userApi.getRoles()
                 if (response.isSuccessful) {
-                    uiState = uiState.copy(roles = response.body() ?: emptyList())
+                    uiState = uiState.copy(roles = response.body()?.data ?: emptyList())
                 }
             } catch (_: Exception) {}
         }
@@ -176,7 +177,10 @@ fun setUserRoles(roleIds: List<Int>) {
                         uiState = uiState.copy(isLoading = false, successMessage = "Usuario actualizado")
                         loadUsuarios()
                     } else {
-                        uiState = uiState.copy(isLoading = false, error = "Error al actualizar usuario")
+                        uiState = uiState.copy(
+                            isLoading = false,
+                            error = ApiErrors.parse(response, "No se pudo actualizar el usuario")
+                        )
                     }
                 } else {
                     val request = UsuarioCreateRequest(
@@ -191,7 +195,10 @@ fun setUserRoles(roleIds: List<Int>) {
                         uiState = uiState.copy(isLoading = false, successMessage = "Usuario creado")
                         loadUsuarios()
                     } else {
-                        uiState = uiState.copy(isLoading = false, error = "Error al crear usuario")
+                        uiState = uiState.copy(
+                            isLoading = false,
+                            error = ApiErrors.parse(response, "No se pudo crear el usuario")
+                        )
                     }
                 }
             } catch (e: Exception) {

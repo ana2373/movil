@@ -14,7 +14,9 @@ import com.example.kaffacafeteria.data.remote.dto.PedidoDto
 import com.example.kaffacafeteria.data.remote.dto.PedidoUpdateRequest
 import com.example.kaffacafeteria.data.remote.api.TransactionApi
 import com.example.kaffacafeteria.util.Resource
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 data class BaristaPanelUiState(
@@ -36,6 +38,8 @@ class BaristaPanelViewModel(application: Application) : AndroidViewModel(applica
     var uiState by mutableStateOf(BaristaPanelUiState())
         private set
 
+    private var refreshJob: Job? = null
+
     init {
         loadPedidos()
     }
@@ -55,14 +59,22 @@ class BaristaPanelViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
-    // Refrescar automáticamente para recibir los pedidos nuevos (como notificaciones)
+    // Refrescar automáticamente para recibir los pedidos nuevos (como notificaciones).
+    // El guard evita que al volver a entrar en la pantalla se lancen varios
+    // bucles de polling simultáneos (antes cada `LaunchedEffect` sumaba otro).
     fun startAutoRefresh() {
-        viewModelScope.launch {
-            while (true) {
+        if (refreshJob?.isActive == true) return
+        refreshJob = viewModelScope.launch {
+            while (isActive) {
                 delay(8000)
                 loadPedidosSilently()
             }
         }
+    }
+
+    override fun onCleared() {
+        refreshJob?.cancel()
+        super.onCleared()
     }
 
     private fun loadPedidosSilently() {

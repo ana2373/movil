@@ -13,6 +13,7 @@ import com.example.kaffacafeteria.data.remote.api.OrderApi
 import com.example.kaffacafeteria.data.remote.dto.*
 import com.example.kaffacafeteria.domain.model.MedioPago
 import com.example.kaffacafeteria.domain.model.User
+import com.example.kaffacafeteria.util.ApiErrors
 import com.example.kaffacafeteria.util.Resource
 import kotlinx.coroutines.launch
 
@@ -212,7 +213,10 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
                     )
                     cartStore.clear()
                 } else {
-                    uiState = uiState.copy(isLoading = false, error = "Error al crear pedido: ${result.code()}")
+                    uiState = uiState.copy(
+                        isLoading = false,
+                        error = ApiErrors.parse(result, "No se pudo crear el pedido")
+                    )
                 }
             } catch (e: Exception) {
                 uiState = uiState.copy(isLoading = false, error = e.message ?: "Error de conexión")

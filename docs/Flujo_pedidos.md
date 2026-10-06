@@ -725,7 +725,8 @@ El token se guarda en **Jetpack DataStore** con la clave `auth_token` (`Constant
 
 > ⚠ Se guarda **en texto plano**. La dependencia `security-crypto` está declarada en
 > `app/build.gradle.kts:88` pero **nunca se usa**.
-> ⚠ No hay lógica de refresco: si el token expira (401), el usuario simplemente ve un error, no se cierra sesión.
+> ⚠ No hay lógica de **refresco**: si el token expira (401) ya no se reintenta, pero sí hay
+> cierre de sesión automático — `AuthInterceptor` borra el token y `AppNavigation` navega al login.
 
 ---
 
@@ -779,8 +780,12 @@ object ApiErrors {
 
 | Camino | Archivos | Mensaje de error |
 |---|---|---|
-| **Con Repository** | `ui/orders/OrderViewModel.kt`, `ui/barista/BaristaPanelViewModel.kt` | `"Error en la petición"` (genérico, pierde el `code`) |
-| **API directa** | `ui/pos/POSViewModel.kt`, `ui/cliente/ClientViewModel.kt`, `ui/admin/*` | `"Error al crear pedido: 500"` (solo el código HTTP) |
+| **Con Repository** | `ui/orders/OrderViewModel.kt`, `ui/barista/BaristaPanelViewModel.kt` | ✅ Ya usa `ApiErrors.parse()` + `codigoApi` (mensaje real del backend) |
+| **API directa** | `ui/pos/POSViewModel.kt`, `ui/cliente/ClientViewModel.kt`, `ui/admin/*` | ⚠ Parcial: POS/Cliente al crear pedido ya usan `ApiErrors.parse()`; el resto de pantallas admin muestra `"Error al cargar X (500)"` |
+
+> Nota: `ApiErrors` lee el cuerpo de error **una sola vez** (Retrofit lo amortigua en un buffer
+> de Okio de un solo uso) y lo memoriza por respuesta, así que llamar `parse()` y `code()` sobre
+> la misma respuesta devuelve ambos datos.
 
 ---
 
@@ -850,20 +855,32 @@ Si te preguntan *"¿y el repo del backend?"*: está fuera de `movil-master`; el 
 
 ## 10. Deuda técnica que puedes mencionar (pregunta común en defensas)
 
-| # | Problema | Ubicación |
-|---|----------|-----------|
-| 1 | `OrderRepositoryImpl` descarta el cuerpo del error → `CAJA_CERRADA` nunca se ve en pedidos | `data/repository/OrderRepositoryImpl.kt:40` |
-| 2 | `response.body()!!` → NPE en `2xx` sin cuerpo (típico en `DELETE`) | `data/repository/OrderRepositoryImpl.kt:38` |
-| 3 | IP del servidor fija en código; no hay `.env` ni build config | `util/Constants.kt:16` |
-| 4 | `runBlocking` leyendo DataStore en el hilo de red en **cada** petición | `AuthInterceptor.kt:10` |
-| 5 | Token en texto plano aunque `security-crypto` esté declarado | `app/build.gradle.kts:88` |
-| 6 | Sin refresh de token ni logout automático ante 401 | — |
-| 7 | La capa `domain` para pedidos es código muerto: la UI usa `PedidoDto` directo | `domain/model/DomainModels.kt:45-86` |
-| 8 | `MetaData.perPage` sin `@SerializedName("per_page")` → nunca se llena | `data/remote/dto/CommonDtos.kt:14` |
-| 9 | `getPedidos(perPage = 1000)` y KPIs calculados en el cliente | `ui/admin/AdminDashboardViewModel.kt:51` |
-| 10 | Dos caminos distintos hacia la API (Repository vs API directa) → lógica duplicada | ver sección 7 |
-| 11 | Polling con `delay(8000)` en el ViewModel, sin cancelar al navegar | `BaristaPanelViewModel.kt:59-66` |
-| 12 | El cliente envía `total`, `precio_unitario` y `numero_factura`: el backend debería **recalcularlos** | `ui/pos/POSViewModel.kt:185-199` |
+| # | Problema | Ubicación | Estado |
+|---|----------|-----------|--------|
+| 1 | `OrderRepositoryImpl` descarta el cuerpo del error → `CAJA_CERRADA` nunca se ve en pedidos | `data/repository/OrderRepositoryImpl.kt:40` | ✅ Corregido: `ApiErrors.parse()` + `codigoApi` en `Resource.Error` |
+| 2 | `response.body()!!` → NPE en `2xx` sin cuerpo (típico en `DELETE`) | `data/repository/OrderRepositoryImpl.kt:38` | ✅ Corregido: `emptyBody()` para respuestas sin contenido |
+| 3 | IP del servidor fija en código; no hay `.env` ni build config | `util/Constants.kt:16` | ✅ Corregido: `KAFFA_API_HOST` en `local.properties` → `BuildConfig.API_HOST` |
+| 4 | `runBlocking` leyendo DataStore en el hilo de red en **cada** petición | `AuthInterceptor.kt:10` | ⏳ Pendiente |
+| 5 | Token en texto plano aunque `security-crypto` esté declarado | `app/build.gradle.kts:88` | ⏳ Pendiente |
+| 6 | Sin refresh de token ni logout automático ante 401 | — | ✅ Corregido: `AuthInterceptor` borra el token ante 401 y `AppNavigation` lleva al login |
+| 7 | La capa `domain` para pedidos es código muerto: la UI usa `PedidoDto` directo | `domain/model/DomainModels.kt:45-86` | ⏳ Pendiente |
+| 8 | `MetaData.perPage` sin `@SerializedName("per_page")` → nunca se llena | `data/remote/dto/CommonDtos.kt:14` | ✅ Corregido |
+| 9 | `getPedidos(perPage = 1000)` y KPIs calculados en el cliente | `ui/admin/AdminDashboardViewModel.kt:51` | ✅ Corregido: el backend limita `per_page` a **100**, ahora `fetchAllPages()` recorre todas las páginas |
+| 10 | Dos caminos distintos hacia la API (Repository vs API directa) → lógica duplicada | ver sección 7 | ⏳ Pendiente (parcial: los mensajes de error de POS/Cliente ya pasan por `ApiErrors`) |
+| 11 | Polling con `delay(8000)` en el ViewModel, sin cancelar al navegar | `BaristaPanelViewModel.kt:59-66` | ✅ Corregido: `Job` único con guard + cancelación en `onCleared()` |
+| 12 | El cliente envía `total`, `precio_unitario` y `numero_factura`: el backend debería **recalcularlos** | `ui/pos/POSViewModel.kt:185-199` | ⏳ Pendiente (decisión de backend) |
+| 13 | El Home del invitado muestra "Error al cargar productos (401)": el catálogo estaba sólo bajo `auth:sanctum` | Backend `routes/api.php:102-109` | ✅ Corregido: `GET categorias/productos` (index/show) ahora públicos con `throttle:60,1`; las escrituras siguen en el grupo admin |
+| 14 | "Agregar barista" desde admin no funcionaba: la app envía `roles:[id]` pero el backend sólo aceptaba `rol_ids` (creaba el usuario SIN rol), y la política de contraseña del `StoreUserRequest` era más estricta que la del diálogo (422 genérico) | Backend `UsuarioController.php`, `StoreUserRequest.php`, `UpdateUserRequest.php`; app `AdminViewModel.saveUser` | ✅ Corregido (parte 1): backend acepta `rol_ids` **o** `roles`; contraseña de cuentas administrativas relajada a `min:8`; la app muestra el mensaje real del servidor |
+| 15 | El diálogo "Agregar Barista" no listaba roles → checkout de "rol" invisible → botón deshabilitado. Causa raíz: `GET /roles` devuelve paginación `{data,meta}` pero la app la tipaba como `List<RolFullDto>` → lista vacía | App `UserApi.getRoles`, `AdminViewModel.loadRoles`; Backend `RolController::index` | ✅ Corregido (parte 2): `getRoles()` usa `PaginatedResponse<RolFullDto>`; entrada `roles.data`; rol "barista" preseleccionado por defecto; backend devuelve `BaseResource::collection` (formato consistente) |
+| 16 | Turnos solo con un día (`fecha`); ahora se pueden definir con **fecha de inicio y fecha final** (rango de días). El turno es "activo" si HOY cae dentro del rango | Backend: migración `2026_10_06_000000_add_fecha_fin_to_turnos_table.php`, `Turno.php`, `TurnoService::getActiveTurno`, `StoreTurnoRequest/UpdateTurnoRequest`, `EquipoController::index`; App: `TurnoDtos.kt`, `TurnosViewModel.createTurno`, `TurnosScreen` (2 date pickers, rango en lista) | ✅ Implementado — requiere `php artisan migrate` |
+
+### Bugs adicionales encontrados y corregidos
+
+| Problema | Detalle |
+|----------|---------|
+| `codigoApi` llegaba siempre `null` | Retrofit amortigua el cuerpo del error en un buffer de Okio **de un solo uso**: `ApiErrors.parse()` consumía el cuerpo y `ApiErrors.code()` leía una cadena vacía. Por eso el flujo "correo sin verificar" (`EMAIL_NOT_VERIFIED` en `LoginViewModel`) nunca se activaba. `ApiErrors` ahora memoriza la lectura por respuesta. |
+| Errores "Error al crear pedido: 500" en POS y Cliente | Ahora usan `ApiErrors.parse()`, así que el usuario ve *"La caja indicada no está abierta"* en lugar del código HTTP. |
+| Backend sin `code` en errores de negocio | `BusinessRuleException` sólo devolvía `{message}`. Ahora acepta un `$codigo` opcional (`CAJA_CERRADA`, `CAJA_NO_EXISTE`, `CAJA_AJENA`, `PERMISO_DENEGADO`) y `Handler` lo incluye en la respuesta **sólo cuando está definido** (el formato anterior se mantiene intacto). |
 
 ---
 

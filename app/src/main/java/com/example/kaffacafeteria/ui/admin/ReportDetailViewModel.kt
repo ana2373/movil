@@ -13,6 +13,7 @@ import com.example.kaffacafeteria.data.remote.api.OrderApi
 import com.example.kaffacafeteria.data.remote.dto.InsumoDto
 import com.example.kaffacafeteria.data.remote.dto.PedidoDto
 import com.example.kaffacafeteria.util.PdfReportBuilder
+import com.example.kaffacafeteria.util.fetchAllPages
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -66,9 +67,12 @@ class ReportDetailViewModel(application: Application) : AndroidViewModel(applica
             val archivado = withContext(Dispatchers.IO) { archive.ultimoReporte(tipo) }
             val archivo = archivado?.let { withContext(Dispatchers.IO) { archive.archivoDe(it) } }
             uiState = ReportUiState(isLoading = true, ultimoArchivado = archivado, archivoUltimo = archivo)
-            try {                if (tipo == ReportArchive.TIPO_INVENTARIO) {
-                    val insumosResp = catalogApi.getInsumos(perPage = 1000)
-                    val stock = (insumosResp.body()?.data ?: emptyList()).map { i ->
+            try {
+                if (tipo == ReportArchive.TIPO_INVENTARIO) {
+                    // per_page está limitado a 100 en el backend: se recorren todas
+                    // las páginas para no dejar insumos fuera del reporte.
+                    val insumos = fetchAllPages { page -> catalogApi.getInsumos(perPage = 100, page = page) }
+                    val stock = insumos.map { i ->
                         InsumoStock(
                             insumo = i,
                             stock = i.stock_actual?.toDoubleOrNull() ?: 0.0,
@@ -83,8 +87,7 @@ class ReportDetailViewModel(application: Application) : AndroidViewModel(applica
                     return@launch
                 }
 
-                val pedidosResp = orderApi.getPedidos(perPage = 1000)
-                val pedidos = pedidosResp.body()?.data ?: emptyList()
+                val pedidos = fetchAllPages { page -> orderApi.getPedidos(perPage = 100, page = page) }
 
                 val entregados = entregadosEnPeriodo(pedidos, tipo)
                 val totalVentas = entregados.sumOf { it.total.toDoubleOrNull() ?: 0.0 }

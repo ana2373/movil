@@ -103,6 +103,20 @@ fun AppNavigation(
     var isLoggedIn by remember { mutableStateOf(false) }
     var currentRole by remember { mutableStateOf<String?>(null) }
 
+    // Sesión rechazada por el backend (401): el token ya no sirve, se limpia en
+    // AuthInterceptor y aquí se devuelve al usuario al login sin dejarlo viendo
+    // errores uno tras otro.
+    val tokenManager = (LocalContext.current.applicationContext as com.example.kaffacafeteria.KaffaApp).container.tokenManager
+    LaunchedEffect(Unit) {
+        tokenManager.sesionExpirada.collect {
+            if (isLoggedIn && currentRoute != Screen.Login.route) {
+                isLoggedIn = false
+                currentRole = null
+                navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
+            }
+        }
+    }
+
     // El ViewModel de la pantalla de contraseña se conserva para que el token
     // que llega por el deep link no se pierda al recomponer la pantalla.
     val resetViewModel: ForgotPasswordViewModel = createViewModel { ForgotPasswordViewModel(it) }

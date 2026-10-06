@@ -65,9 +65,13 @@ class TurnosViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun createTurno(fecha: String, tipo: String, baristaIds: List<Int>) {
-        if (fecha.isBlank()) {
-            uiState = uiState.copy(error = "Selecciona una fecha")
+    fun createTurno(fecha: String, fechaFin: String, tipo: String, baristaIds: List<Int>) {
+        if (fecha.isBlank() || fechaFin.isBlank()) {
+            uiState = uiState.copy(error = "Selecciona una fecha de inicio y una fecha final")
+            return
+        }
+        if (fechaFin < fecha) {
+            uiState = uiState.copy(error = "La fecha final debe ser igual o posterior a la fecha de inicio")
             return
         }
         if (baristaIds.isEmpty()) {
@@ -77,7 +81,7 @@ class TurnosViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, error = null)
             try {
-                val response = turnoApi.createTurno(TurnoRequest(fecha, tipo, baristaIds))
+                val response = turnoApi.createTurno(TurnoRequest(fecha, fechaFin, tipo, baristaIds))
                 if (response.isSuccessful) {
                     uiState = uiState.copy(isLoading = false, successMessage = "Turno guardado")
                     loadTurnos()

@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.kaffacafeteria.data.remote.dto.TurnoDto
 import com.example.kaffacafeteria.ui.theme.*
 import com.example.kaffacafeteria.util.createViewModel
 import java.text.SimpleDateFormat
@@ -87,7 +88,7 @@ fun TurnosScreen(
                                 }
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(formatFechaTurno(turno.fecha), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                    Text(formatRangoTurno(turno), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                                     Text("${turno.tipo.replaceFirstChar { it.uppercase() }} · ${horarioDe(turno.tipo)}", style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
                                     val nombres = turno.baristas?.joinToString { it.nombre }?.takeIf { it.isNotBlank() } ?: "Sin barista"
                                     Text(nombres, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
@@ -104,7 +105,8 @@ fun TurnosScreen(
     }
 
     if (showCreateDialog) {
-        var selectedFecha by remember { mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Calendar.getInstance().time)) }
+        var selectedInicio by remember { mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Calendar.getInstance().time)) }
+        var selectedFin by remember { mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Calendar.getInstance().time)) }
         var tipo by remember { mutableStateOf("mañana") }
         val selectedIds = remember { mutableStateListOf<Int>() }
 
@@ -113,32 +115,16 @@ fun TurnosScreen(
             title = { Text("Registrar Turno", fontWeight = FontWeight.Bold) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    val fechaLabel = runCatching {
-                        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(
-                            SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(selectedFecha)!!
-                        )
-                    }.getOrDefault(selectedFecha)
-                    OutlinedTextField(
-                        value = fechaLabel,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Fecha") },
-                        trailingIcon = { Icon(Icons.Default.CalendarMonth, contentDescription = null) },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant)
+                    CampoFecha(
+                        etiqueta = "Fecha de inicio",
+                        fecha = selectedInicio,
+                        onCambiar = { selectedInicio = it }
                     )
-                    TextButton(onClick = {
-                        val cal = Calendar.getInstance()
-                        runCatching { cal.time = SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(selectedFecha)!! }
-                        DatePickerDialog(
-                            context,
-                            { _, year, month, day ->
-                                val c = Calendar.getInstance().apply { set(year, month, day) }
-                                selectedFecha = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(c.time)
-                            },
-                            cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)
-                        ).show()
-                    }) { Text("Elegir fecha") }
+                    CampoFecha(
+                        etiqueta = "Fecha final",
+                        fecha = selectedFin,
+                        onCambiar = { selectedFin = it }
+                    )
 
                     Column {
                         Text("Turno:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
@@ -180,7 +166,7 @@ fun TurnosScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.createTurno(selectedFecha, tipo, selectedIds.toList())
+                        viewModel.createTurno(selectedInicio, selectedFin, tipo, selectedIds.toList())
                         showCreateDialog = false
                     },
                     enabled = selectedIds.isNotEmpty() && !state.isLoading,
@@ -194,6 +180,44 @@ fun TurnosScreen(
 
 private fun horarioDe(tipo: String): String =
     if (tipo.lowercase().startsWith("ma")) "07:00 - 13:00" else "13:00 - 18:00"
+
+@Composable
+private fun CampoFecha(etiqueta: String, fecha: String, onCambiar: (String) -> Unit) {
+    val colorScheme = MaterialTheme.colorScheme
+    val context = LocalContext.current
+    val fechaLabel = runCatching {
+        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(fecha)!!
+        )
+    }.getOrDefault(fecha)
+    OutlinedTextField(
+        value = fechaLabel,
+        onValueChange = {},
+        readOnly = true,
+        label = { Text(etiqueta) },
+        trailingIcon = { Icon(Icons.Default.CalendarMonth, contentDescription = null) },
+        modifier = Modifier.fillMaxWidth(),
+        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant)
+    )
+    TextButton(onClick = {
+        val cal = Calendar.getInstance()
+        runCatching { cal.time = SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(fecha)!! }
+        DatePickerDialog(
+            context,
+            { _, year, month, day ->
+                val c = Calendar.getInstance().apply { set(year, month, day) }
+                onCambiar(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(c.time))
+            },
+            cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }) { Text("Elegir fecha") }
+}
+
+private fun formatRangoTurno(turno: TurnoDto): String {
+    val inicio = formatFechaTurno(turno.fecha)
+    val fin = if (turno.fechaFin.isNullOrBlank()) null else formatFechaTurno(turno.fechaFin)
+    return if (fin != null && fin != inicio) "$inicio – $fin" else inicio
+}
 
 private fun formatFechaTurno(raw: String?): String {
     if (raw.isNullOrBlank()) return "-"

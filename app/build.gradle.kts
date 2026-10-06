@@ -12,6 +12,11 @@ val signingProps = Properties().apply {
     if (f.exists()) f.inputStream().use { load(it) }
 }
 
+// Host del backend. Si KAFFA_API_HOST está vacío en local.properties se usa el
+// valor por defecto de Constants.kt (10.0.2.2 en emulador, IP de la PC en
+// celular físico).
+val apiHost: String = signingProps.getProperty("KAFFA_API_HOST").orEmpty()
+
 android {
     namespace = "com.example.kaffacafeteria"
     compileSdk {
@@ -26,6 +31,8 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+
+        buildConfigField("String", "API_HOST", "\"$apiHost\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
