@@ -1,5 +1,7 @@
 package com.example.kaffacafeteria.ui.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -26,6 +28,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.kaffacafeteria.ui.admin.*
+import com.example.kaffacafeteria.ui.asistente.AsistenteFlotante
 import com.example.kaffacafeteria.ui.auth.ForgotPasswordScreen
 import com.example.kaffacafeteria.ui.auth.ForgotPasswordViewModel
 import com.example.kaffacafeteria.ui.auth.LoginScreen
@@ -85,6 +88,7 @@ sealed class Screen(val route: String) {
     data object Proveedores : Screen("admin/proveedores")
     data object Turnos : Screen("admin/turnos")
     data object Promociones : Screen("admin/promociones")
+    data object Eventos : Screen("admin/eventos")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,6 +106,9 @@ fun AppNavigation(
 
     var isLoggedIn by remember { mutableStateOf(false) }
     var currentRole by remember { mutableStateOf<String?>(null) }
+    // Cambia en cada inicio de sesión para que el asistente flotante descarte
+    // el historial del usuario anterior y no mezcle conversaciones entre roles.
+    var sessionKey by remember { mutableIntStateOf(0) }
 
     // Sesión rechazada por el backend (401): el token ya no sirve, se limpia en
     // AuthInterceptor y aquí se devuelve al usuario al login sin dejarlo viendo
@@ -179,15 +186,17 @@ fun AppNavigation(
             }
         }
     ) { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
         NavHost(
             navController = navController,
             startDestination = Screen.Splash.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.fillMaxSize()
         ) {
             composable(Screen.Splash.route) {
                 SplashScreen(
                     onContinue = { user ->
                         currentRole = user?.roles?.firstOrNull()?.nombre ?: user?.let { if (it.isCliente) "cliente" else if (it.isBarista) "barista" else if (it.isAdmin) "admin" else null }
+                        sessionKey++
                         val route = homeRouteFor(user)
                         navController.navigate(route) { popUpTo(Screen.Splash.route) { inclusive = true } }
                     },
@@ -222,6 +231,7 @@ fun AppNavigation(
                     onLoginSuccess = { user ->
                         isLoggedIn = true
                         currentRole = user?.roles?.firstOrNull()?.nombre
+                        sessionKey++
                         val route = homeRouteFor(user)
                         navController.navigate(route) { popUpTo(Screen.Login.route) { inclusive = true } }
                     },
@@ -340,6 +350,7 @@ fun AppNavigation(
                     onNavigateToCaja = { navController.navigate(Screen.Caja.route) },
                     onNavigateToTurnos = { navController.navigate(Screen.Turnos.route) },
                     onNavigateToPromociones = { navController.navigate(Screen.Promociones.route) },
+                    onNavigateToEventos = { navController.navigate(Screen.Eventos.route) },
                     onNavigateToProfile = { requireAuth { navController.navigate(Screen.Profile.route) } },
                     onLogout = {
                         isLoggedIn = false
@@ -379,6 +390,14 @@ composable(Screen.Gastos.route) { GastosScreen(onBack = { navController.popBackS
             composable(Screen.Proveedores.route) { ProveedoresScreen(onBack = { navController.popBackStack() }) }
             composable(Screen.Turnos.route) { TurnosScreen(onBack = { navController.popBackStack() }) }
             composable(Screen.Promociones.route) { PromocionesScreen(onBack = { navController.popBackStack() }) }
+            composable(Screen.Eventos.route) { EventosScreen(onBack = { navController.popBackStack() }) }
+        }
+
+        // Ícono flotante del Asistente KAFFA: visible para todos los usuarios
+        // autenticados, por encima de cualquier pantalla.
+        if (isLoggedIn) {
+            AsistenteFlotante(rol = currentRole, sessionKey = sessionKey)
+        }
         }
     }
 }

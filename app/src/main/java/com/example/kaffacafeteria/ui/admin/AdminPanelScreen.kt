@@ -44,6 +44,7 @@ fun AdminPanelScreen(
     onNavigateToCaja: () -> Unit,
     onNavigateToTurnos: () -> Unit,
     onNavigateToPromociones: () -> Unit,
+    onNavigateToEventos: () -> Unit,
     onNavigateToProfile: () -> Unit = {},
     onLogout: () -> Unit = {},
     viewModel: AdminViewModel = createViewModel { AdminViewModel(it) },
@@ -142,6 +143,7 @@ fun AdminPanelScreen(
             SectionTitle("Ventas y pedidos")
             AdminCard(icon = Icons.Default.ReceiptLong, title = "Historial de pedidos", description = "Pedidos y facturas emitidas", color = Negro, onClick = onNavigateToOrders)
             AdminCard(icon = Icons.Default.Campaign, title = "Promociones", description = "Crea promociones con color e imagen", color = SecondaryGreen, onClick = onNavigateToPromociones)
+            AdminCard(icon = Icons.Default.Event, title = "Eventos", description = "Crea eventos que se muestran en la web", color = Terracotta, onClick = onNavigateToEventos)
 
             SectionTitle("Logística e inventario")
             AdminCard(icon = Icons.Default.Inventory, title = "Insumos", description = "Materias primas e inventario", color = SecondaryGreen, onClick = onNavigateToInsumos)

@@ -49,6 +49,12 @@ class AppContainer(context: Application) {
     /** Reportes/novedades: el barista los crea, el administrador los gestiona. */
     val reporteApi: ReporteApi = retrofit.create(ReporteApi::class.java)
 
+    /** Eventos: lectura pública + administración (crear/editar/publicar). */
+    val eventoApi: EventoApi = retrofit.create(EventoApi::class.java)
+
+    /** Asistente IA (IA local): disponible para todos los usuarios autenticados. */
+    val asistenteApi: AsistenteApi = retrofit.create(AsistenteApi::class.java)
+
     val authRepository: AuthRepository = AuthRepositoryImpl(authApi, tokenManager)
     val catalogRepository: CatalogRepository = CatalogRepositoryImpl(catalogApi)
     val orderRepository: OrderRepository = OrderRepositoryImpl(orderApi)
