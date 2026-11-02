@@ -1,9 +1,9 @@
 package com.example.kaffacafeteria.ui.barista
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,19 +19,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.activity.compose.BackHandler
 import com.example.kaffacafeteria.data.remote.dto.PedidoDto
-import com.example.kaffacafeteria.ui.components.EmptyState
 import com.example.kaffacafeteria.ui.components.LoadingIndicator
-import com.example.kaffacafeteria.ui.theme.CoffeeBrown
-import com.example.kaffacafeteria.ui.theme.PrimaryGreen
 import com.example.kaffacafeteria.ui.theme.CafeOscuro
+import com.example.kaffacafeteria.ui.theme.CoffeeBrown
 import com.example.kaffacafeteria.ui.theme.Negro
+import com.example.kaffacafeteria.ui.theme.PrimaryGreen
 import com.example.kaffacafeteria.ui.theme.Terracotta
 import com.example.kaffacafeteria.ui.theme.VerdeClaro
 import com.example.kaffacafeteria.ui.theme.isDarkModeActive
 import com.example.kaffacafeteria.ui.theme.ink
 import com.example.kaffacafeteria.util.createViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,7 +50,15 @@ fun BaristaPanelScreen(
     var showExitDialog by remember { mutableStateOf(false) }
     var showReportDialog by remember { mutableStateOf(false) }
 
-    BackHandler { showExitDialog = true }
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    BackHandler(enabled = drawerState.isOpen) {
+        scope.launch { drawerState.close() }
+    }
+    BackHandler(enabled = !drawerState.isOpen) {
+        showExitDialog = true
+    }
 
     LaunchedEffect(Unit) {
         viewModel.loadPedidos()
@@ -60,77 +68,162 @@ fun BaristaPanelScreen(
 
     LaunchedEffect(state.successMessage) {
         if (state.successMessage != null) {
-            kotlinx.coroutines.delay(2500)
+            delay(2500)
             viewModel.clearMessages()
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
-        TopAppBar(
-            title = { Text("Panel Barista") },
-            actions = {
-                IconButton(onClick = onExportHistorial) { Icon(Icons.Default.Download, contentDescription = "Exportar historial", tint = colorScheme.onPrimary) }
-                IconButton(onClick = { viewModel.loadPedidos() }) { Icon(Icons.Default.Refresh, contentDescription = "Actualizar", tint = colorScheme.onPrimary) }
-                IconButton(onClick = onNavigateToProfile) {
-                    Icon(Icons.Default.AccountCircle, contentDescription = "Perfil", tint = colorScheme.onPrimary)
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary, titleContentColor = colorScheme.onPrimary)
-        )
-
-        Column(modifier = Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            // ── Resumen de gestión de pedidos ──
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerContainerColor = colorScheme.surface,
+                drawerContentColor = colorScheme.onSurface
             ) {
-                Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Surface(shape = CircleShape, color = ink(CafeOscuro).copy(alpha = 0.15f), modifier = Modifier.size(44.dp)) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.RestaurantMenu, contentDescription = null, tint = ink(CafeOscuro))
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(280.dp)
+                        .padding(vertical = 16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = colorScheme.primary.copy(alpha = 0.12f),
+                            modifier = Modifier.size(44.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.RestaurantMenu, contentDescription = null, tint = colorScheme.primary)
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text("Panel Barista", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text("Menú de funcionalidades", style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
                         }
                     }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Gestión de pedidos", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    NavigationDrawerItem(
+                        label = { Text("Órdenes / Pedidos") },
+                        selected = true,
+                        onClick = { scope.launch { drawerState.close() } },
+                        icon = { Icon(Icons.Default.ListAlt, contentDescription = null) },
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("Caja de cobro / POS") },
+                        selected = false,
+                        onClick = { scope.launch { drawerState.close() }; onNavigateToCaja() },
+                        icon = { Icon(Icons.Default.PointOfSale, contentDescription = null) },
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("Inventario / Insumos") },
+                        selected = false,
+                        onClick = { scope.launch { drawerState.close() }; onNavigateToInsumos() },
+                        icon = { Icon(Icons.Default.Inventory, contentDescription = null) },
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("Reportar inventario / Mermas") },
+                        selected = false,
+                        onClick = { scope.launch { drawerState.close() }; showReportDialog = true },
+                        icon = { Icon(Icons.Default.Assignment, contentDescription = null) },
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("Chat") },
+                        selected = false,
+                        onClick = { scope.launch { drawerState.close() }; onNavigateToChat() },
+                        icon = { Icon(Icons.Default.Chat, contentDescription = null) },
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    )
+                    NavigationDrawerItem(
+                        label = { Text("Perfil") },
+                        selected = false,
+                        onClick = { scope.launch { drawerState.close() }; onNavigateToProfile() },
+                        icon = { Icon(Icons.Default.AccountCircle, contentDescription = null) },
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    NavigationDrawerItem(
+                        label = { Text("Cerrar sesión") },
+                        selected = false,
+                        onClick = { scope.launch { drawerState.close() }; showExitDialog = true },
+                        icon = { Icon(Icons.Default.Logout, contentDescription = null, tint = colorScheme.error) },
+                        colors = NavigationDrawerItemDefaults.colors(unselectedIconColor = colorScheme.error, unselectedTextColor = colorScheme.error),
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    )
+                }
+            }
+        }
+    ) {
+        Column(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
+            TopAppBar(
+                title = { Text("Panel Barista") },
+                navigationIcon = {
+                    IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                        Icon(Icons.Default.Menu, contentDescription = "Menú", tint = colorScheme.onPrimary)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onExportHistorial) { Icon(Icons.Default.Download, contentDescription = "Exportar historial", tint = colorScheme.onPrimary) }
+                    IconButton(onClick = { viewModel.loadPedidos() }) { Icon(Icons.Default.Refresh, contentDescription = "Actualizar", tint = colorScheme.onPrimary) }
+                    IconButton(onClick = onNavigateToProfile) {
+                        Icon(Icons.Default.AccountCircle, contentDescription = "Perfil", tint = colorScheme.onPrimary)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary, titleContentColor = colorScheme.onPrimary)
+            )
+
+            Column(modifier = Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Surface(shape = CircleShape, color = ink(CafeOscuro).copy(alpha = 0.15f), modifier = Modifier.size(44.dp)) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.RestaurantMenu, contentDescription = null, tint = ink(CafeOscuro))
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Gestión de pedidos", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
+                            Text("Usa el menú lateral para acceder a Caja, Inventario y más", style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
+                        }
                     }
                 }
-            }
 
-            state.successMessage?.let { msg ->
-                Snackbar(modifier = Modifier.fillMaxWidth(), containerColor = colorScheme.secondary, contentColor = colorScheme.onSecondary) {
-                    Text(msg, fontWeight = FontWeight.SemiBold)
+                state.successMessage?.let { msg ->
+                    Snackbar(modifier = Modifier.fillMaxWidth(), containerColor = colorScheme.secondary, contentColor = colorScheme.onSecondary) {
+                        Text(msg, fontWeight = FontWeight.SemiBold)
+                    }
                 }
-            }
-            state.error?.let { err ->
-                Text(err, modifier = Modifier.fillMaxWidth(), color = colorScheme.error, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
-            }
+                state.error?.let { err ->
+                    Text(err, modifier = Modifier.fillMaxWidth(), color = colorScheme.error, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+                }
 
-            // ── Tablero Kanban de órdenes ──
-            Text("Órdenes en tiempo real", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black, color = colorScheme.onSurfaceVariant)
+                Text("Órdenes en tiempo real", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black, color = colorScheme.onSurfaceVariant)
 
-            if (state.isLoading && state.pedidos.isEmpty()) {
-                LoadingIndicator()
-            } else {
-                KanbanBoard(
-                    pedidos = state.pedidos,
-                    updating = state.updLoadingPedidoId,
-                    onPreparar = { viewModel.marcarEnPreparacion(it) },
-                    onEntregar = { viewModel.marcarListo(it) }
-                )
-            }
-
-            // ── Módulos barista ──
-            Text("Módulos", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black, color = colorScheme.onSurfaceVariant)
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                BaristaModuleCard(icon = Icons.Default.Inventory, title = "Inventario", color = PrimaryGreen, modifier = Modifier.weight(1f), onClick = onNavigateToInsumos)
-                BaristaModuleCard(icon = Icons.Default.Assignment, title = "Reportar inventario", color = CafeOscuro, modifier = Modifier.weight(1f), onClick = { showReportDialog = true })
-                BaristaModuleCard(icon = Icons.Default.Chat, title = "Chat", color = Negro, modifier = Modifier.weight(1f), onClick = onNavigateToChat)
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                BaristaModuleCard(icon = Icons.Default.PointOfSale, title = "Caja de cobro", color = Terracotta, modifier = Modifier.weight(1f), onClick = onNavigateToCaja)
+                if (state.isLoading && state.pedidos.isEmpty()) {
+                    LoadingIndicator()
+                } else {
+                    KanbanBoard(
+                        pedidos = state.pedidos,
+                        updating = state.updLoadingPedidoId,
+                        onPreparar = { viewModel.marcarEnPreparacion(it) },
+                        onEntregar = { viewModel.marcarListo(it) }
+                    )
+                }
             }
         }
     }
@@ -151,7 +244,7 @@ fun BaristaPanelScreen(
         AlertDialog(
             onDismissRequest = { showExitDialog = false },
             title = { Text("Cerrar sesión", fontWeight = FontWeight.Black) },
-            text = { Text("Estás en el Panel del Barista. ¿Deseas salir y cerrar sesión?") },
+            text = { Text("¿Deseas salir y cerrar sesión del Panel del Barista?") },
             confirmButton = {
                 Button(
                     onClick = { showExitDialog = false; onLogout() },

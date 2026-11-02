@@ -2,6 +2,7 @@ package com.example.kaffacafeteria
 
 import android.app.Application
 import com.example.kaffacafeteria.data.local.CartStore
+import com.example.kaffacafeteria.data.local.PromoSesion
 import com.example.kaffacafeteria.data.local.TokenManager
 import com.example.kaffacafeteria.data.remote.api.*
 import com.example.kaffacafeteria.data.remote.interceptor.AuthInterceptor
@@ -21,6 +22,9 @@ import java.util.concurrent.TimeUnit
 class AppContainer(context: Application) {
     val tokenManager = TokenManager(context)
     val cartStore = CartStore()
+
+    /** Promoción del momento: se elige una vez por sesión de la app. */
+    val promoSesion = PromoSesion()
 
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(AuthInterceptor(tokenManager))
@@ -69,3 +73,6 @@ class KaffaApp : Application() {
         container = AppContainer(this)
     }
 }
+
+val Application.promoPopupDismissStore: com.example.kaffacafeteria.data.local.PromoPopupDismissStore
+    get() = com.example.kaffacafeteria.data.local.PromoPopupDismissStore(this)

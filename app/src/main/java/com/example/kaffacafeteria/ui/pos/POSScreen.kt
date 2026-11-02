@@ -21,18 +21,32 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.kaffacafeteria.data.remote.dto.EventoDto
+import com.example.kaffacafeteria.ui.admin.PromocionesViewModel
 import com.example.kaffacafeteria.ui.components.EmptyState
 import com.example.kaffacafeteria.ui.components.ErrorMessage
 import com.example.kaffacafeteria.ui.components.LoadingIndicator
+import com.example.kaffacafeteria.ui.components.PromocionPopup
+import com.example.kaffacafeteria.ui.components.productosDePromo
+import com.example.kaffacafeteria.ui.components.proximoEvento
+import com.example.kaffacafeteria.promoPopupDismissStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import com.example.kaffacafeteria.ui.home.EventoDetailDialog
+import com.example.kaffacafeteria.ui.home.EventosPublicosViewModel
 import com.example.kaffacafeteria.ui.theme.*
 import com.example.kaffacafeteria.util.createViewModel
 import com.example.kaffacafeteria.util.imagenLocal
@@ -43,10 +57,13 @@ import com.example.kaffacafeteria.util.toImageUrl
 fun POSScreen(
     onBack: () -> Unit,
     onOrderCreated: (Int) -> Unit = {},
-    viewModel: POSViewModel = createViewModel { POSViewModel(it) }
+    viewModel: POSViewModel = createViewModel { POSViewModel(it) },
+    eventosViewModel: EventosPublicosViewModel = createViewModel { EventosPublicosViewModel(it) },
+    promosViewModel: PromocionesViewModel = createViewModel { PromocionesViewModel(it) }
 ) {
     val state = viewModel.uiState
     val colorScheme = MaterialTheme.colorScheme
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(state.createdOrderId) {
         state.createdOrderId?.let { id ->
@@ -57,11 +74,44 @@ fun POSScreen(
 
     var showPaymentDialog by remember { mutableStateOf(false) }
 
+    // ── Pantalla emergente de promo/eventos ──
+    // Promociones NO aparecen como popup; solo eventos
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val dismissStore = remember { (context.applicationContext as com.example.kaffacafeteria.KaffaApp).promoPopupDismissStore }
+    val eventosState = eventosViewModel.uiState
+    val promosState = promosViewModel.uiState
+    var mostrarPopup by rememberSaveable { mutableStateOf(false) }
+    var dismissedEventos by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var selectedEvento by remember { mutableStateOf<EventoDto?>(null) }
+
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            dismissedEventos = dismissStore.getDismissedEventoIds()
+        }
+    }
+
+    val eventoParaPopup = eventosState.eventos.firstOrNull { e ->
+        val idStr = e.id.toString()
+        !dismissedEventos.contains(idStr)
+    }
+
+    LaunchedEffect(promosState.promociones) {
+        promosViewModel.cargarPromoSesion()
+    }
+
     Column(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
         TopAppBar(
             title = { Text("Nueva Venta") },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = colorScheme.onPrimary) } },
-            actions = { Text("Total: $${"%.2f".format(viewModel.cartTotal)}", style = MaterialTheme.typography.titleMedium, color = colorScheme.onPrimary) },
+            actions = {
+                // Botón para volver a abrir eventos
+                IconButton(onClick = { 
+                    if (eventoParaPopup != null) mostrarPopup = true
+                }) {
+                    Icon(Icons.Default.Event, contentDescription = "Eventos", tint = colorScheme.onPrimary)
+                }
+                Text("Total: $${"%.2f".format(viewModel.cartTotal)}", style = MaterialTheme.typography.titleMedium, color = colorScheme.onPrimary)
+            },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary, titleContentColor = colorScheme.onPrimary)
         )
 
@@ -113,7 +163,55 @@ fun POSScreen(
             Column(modifier = Modifier.width(280.dp)) {
                 Surface(color = colorScheme.surface, modifier = Modifier.fillMaxHeight(), shadowElevation = 4.dp) {
                     Column(modifier = Modifier.fillMaxSize().padding(12.dp)) {
-                        Text("Carrito", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = colorScheme.primary)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Carrito", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = colorScheme.primary, modifier = Modifier.weight(1f))
+                            if (viewModel.cartItems.isNotEmpty()) {
+                                Text(
+                                    "${viewModel.cartItems.sumOf { it.cantidad }} art.",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        // Promoción aplicada: muestra el ahorro y permite quitarla.
+                        viewModel.promoAplicada?.let { promo ->
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = colorScheme.secondaryContainer,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.LocalOffer, contentDescription = null, tint = colorScheme.onSecondaryContainer, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            promo.nombre,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = colorScheme.onSecondaryContainer,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        if (viewModel.ahorroPromo > 0) {
+                                            Text(
+                                                "Ahorras $${"%.2f".format(viewModel.ahorroPromo)}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = colorScheme.onSecondaryContainer
+                                            )
+                                        }
+                                    }
+                                    TextButton(onClick = { viewModel.quitarPromo() }) {
+                                        Text("Quitar", style = MaterialTheme.typography.labelSmall)
+                                    }
+                                }
+                            }
+                        }
+
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colorScheme.outlineVariant)
                         if (viewModel.cartItems.isEmpty()) {
                             EmptyState("Carrito vacío")
@@ -123,7 +221,24 @@ fun POSScreen(
                                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(item.producto.nombre, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                            Text("$${"%.2f".format(item.subtotal)}", style = MaterialTheme.typography.bodySmall, color = colorScheme.secondary)
+                                            if (item.tieneDescuento) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(
+                                                        "$${"%.2f".format(item.precioBase)}",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = colorScheme.onSurfaceVariant,
+                                                        textDecoration = TextDecoration.LineThrough
+                                                    )
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    Text(
+                                                        "-${item.descuentoPorcentaje}%",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = colorScheme.secondary,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+                                            Text("$${"%.2f".format(item.subtotal)}", style = MaterialTheme.typography.bodySmall, color = colorScheme.secondary, fontWeight = FontWeight.Bold)
                                         }
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             IconButton(onClick = { viewModel.updateCantidad(item.producto.id, item.cantidad - 1) }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Remove, contentDescription = "Restar", modifier = Modifier.size(16.dp)) }
@@ -136,6 +251,13 @@ fun POSScreen(
                             }
                         }
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colorScheme.outlineVariant)
+                        if (viewModel.ahorroPromo > 0) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("Ahorro promo", style = MaterialTheme.typography.labelMedium, color = colorScheme.secondary)
+                                Text("-$${"%.2f".format(viewModel.ahorroPromo)}", style = MaterialTheme.typography.labelMedium, color = colorScheme.secondary, fontWeight = FontWeight.Bold)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text("Total:", fontWeight = FontWeight.Bold)
                             Text("$${"%.2f".format(viewModel.cartTotal)}", fontWeight = FontWeight.Bold, color = colorScheme.primary)
@@ -162,6 +284,37 @@ fun POSScreen(
             }
         )
     }
+
+    // Pantalla emergente solo para eventos
+    if (mostrarPopup && eventoParaPopup != null) {
+        PromocionPopup(
+            promo = null,
+            evento = eventoParaPopup,
+            productosPromo = emptyList(),
+            onDismiss = { 
+                mostrarPopup = false
+                eventoParaPopup?.let { ev ->
+                    scope.launch(Dispatchers.IO) {
+                        dismissStore.dismissEvento(ev.id)
+                    }
+                }
+            },
+            onComprarPromo = { },
+            onVerEvento = {
+                mostrarPopup = false
+                eventoParaPopup?.let { ev ->
+                    scope.launch(Dispatchers.IO) {
+                        dismissStore.dismissEvento(ev.id)
+                    }
+                    selectedEvento = ev
+                }
+            }
+        )
+    }
+
+    selectedEvento?.let { evento ->
+        EventoDetailDialog(evento = evento, onDismiss = { selectedEvento = null })
+    }
 }
 
 @Composable
@@ -173,6 +326,7 @@ fun PaymentDialog(
     onConfirm: (Int, String?) -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
+    val scope = rememberCoroutineScope()
     var selectedMethodId by remember { mutableIntStateOf(paymentMethods.firstOrNull()?.id ?: 0) }
     var comprobanteUrl by remember { mutableStateOf("") }
     var comprobanteUri by remember { mutableStateOf<Uri?>(null) }

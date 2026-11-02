@@ -9,61 +9,27 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.kaffacafeteria.KaffaApp
+import com.example.kaffacafeteria.data.remote.dto.ProductoDto
+import com.example.kaffacafeteria.domain.model.Promocion
+import com.example.kaffacafeteria.domain.model.estaExpirada
 import com.google.gson.Gson
+import com.google.gson.JsonArray
+import com.google.gson.JsonPrimitive
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 private val Application.promosDataStore by preferencesDataStore(name = "promociones_store")
-
-/**
- * Promoción del splash.
- *
- * Vigencia: se guarda un único instante (`expiracionMillis`) con día y hora.
- * Si es `null` la promoción no caduca y queda activa hasta que el
- * administrador la desactive o la elimine.
- */
-data class Promocion(
-    val id: Int,
-    val nombre: String,
-    val descripcion: String,
-    val tipo: String,
-    val colorIndex: Int,
-    val imagenUri: String? = null,
-    val expiracionMillis: Long? = null,
-    val activa: Boolean = true
-)
-
-/** Instante en que deja de mostrarse la promoción, o null si no caduca. */
-fun Promocion.fechaLimiteMillis(): Long? = expiracionMillis
-
-fun Promocion.estaExpirada(now: Long = System.currentTimeMillis()): Boolean {
-    val limite = fechaLimiteMillis() ?: return false
-    return now >= limite
-}
-
-/** Vigencia en formato 12 h (am/pm) para la lista: "25/06/2025, 03:30 p. m." */
-fun formatExpiracion(millis: Long): String =
-    SimpleDateFormat("dd/MM/yyyy, hh:mm a", Locale("es", "CO")).format(Date(millis))
-
-/** Combina el día elegido con la hora (formato 24 h) en un único instante. */
-fun buildExpiracionMillis(diaMillis: Long, hora: Int, minuto: Int): Long =
-    Calendar.getInstance().apply {
-        timeInMillis = diaMillis
-        set(Calendar.HOUR_OF_DAY, hora)
-        set(Calendar.MINUTE, minuto)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
 
 data class PromocionesUiState(
     val promociones: List<Promocion> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    /** Catálogo actual, para que el administrador elija los productos de la promo. */
+    val productos: List<ProductoDto> = emptyList(),
+    /** Promoción del momento: la que muestran el Inicio y el Carrito. */
+    val promoDestacada: Promocion? = null
 )
 
 /**
@@ -75,28 +41,121 @@ data class PromocionesUiState(
 class PromocionesViewModel(application: Application) : AndroidViewModel(application) {
     private val gson = Gson()
     private val promosKey = stringPreferencesKey("promociones")
+    private val catalogApi = (application as KaffaApp).container.catalogApi
+    private val promoSesion = (application as KaffaApp).container.promoSesion
+
+    /** Id de la última promoción mostrada al abrir la app (para rotar). */
+    private val ultimaMostradaKey = stringPreferencesKey("ultima_promo_mostrada")
 
     var uiState by mutableStateOf(PromocionesUiState())
         private set
 
-    init { load() }
+    init {
+        load()
+        loadProductos()
+    }
+
+    /**
+     * Siguiente promoción a mostrar en el arranque.
+     *
+     * Rota de forma determinista sobre las promociones activas y vigentes:
+     * cada vez que se abre la app se muestra una distinta y, al agotar la
+     * lista, vuelve a empezar. El id mostrado se guarda en DataStore para que
+     * la rotación sobreviva al cierre de la aplicación.
+     */
+    suspend fun siguientePromocion(
+        activas: List<Promocion> = uiState.promociones.filter { it.activa && !it.estaExpirada() }
+    ): Promocion? {
+        if (activas.isEmpty()) return null
+        return try {
+            val prefs = getApplication<Application>().promosDataStore.data.first()
+            val ultimoId = prefs[ultimaMostradaKey]?.toIntOrNull()
+            val indiceActual = activas.indexOfFirst { it.id == ultimoId }
+            // Sin coincidencia (primer arranque o promo borrada) → la primera.
+            val siguiente = activas[(indiceActual + 1) % activas.size]
+            getApplication<Application>().promosDataStore.edit { it[ultimaMostradaKey] = siguiente.id.toString() }
+            siguiente
+        } catch (_: Exception) {
+            activas.first()
+        }
+    }
 
     fun load() {
+        android.util.Log.d("PromoDebug", "load() init vm=${hashCode()}")
         viewModelScope.launch {
+            android.util.Log.d("PromoDebug", "load() coroutine start vm=${hashCode()}")
             uiState = uiState.copy(isLoading = true, error = null)
             try {
                 val json = getApplication<Application>().promosDataStore.data.first()[promosKey]
-                val list: List<Promocion> = if (json.isNullOrBlank()) {
-                    emptyList()
-                } else {
-                    try {
-                        gson.fromJson(json, object : TypeToken<List<Promocion>>() {}.type) ?: emptyList()
-                    } catch (_: Exception) { emptyList() }
-                }
-                uiState = uiState.copy(promociones = list, isLoading = false)
+                android.util.Log.d("PromoDebug", "load json=" + json)
+                uiState = uiState.copy(promociones = leerPromociones(json), isLoading = false)
+                android.util.Log.d("PromoDebug", "load promos=" + uiState.promociones)
             } catch (e: Exception) {
+                android.util.Log.d("PromoDebug", "load() ERROR vm=${hashCode()} " + e.javaClass.name + ": " + e.message)
                 uiState = uiState.copy(isLoading = false, error = e.message)
             }
+        }
+    }
+
+    /** Catálogo para el selector de productos de la promoción. */
+    private fun loadProductos() {
+        viewModelScope.launch {
+            try {
+                val response = catalogApi.getProductos(perPage = 100)
+                if (response.isSuccessful) {
+                    uiState = uiState.copy(productos = response.body()?.data ?: emptyList())
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    /**
+     * Elige la promoción del momento (la primera vez que se abre la app).
+     *
+     * La decisión queda guardada en la sesión para que el Inicio y el Carrito
+     * muestren la misma promoción. Si todavía no hay promociones cargadas, no
+     * rota nada: se reintenta cuando lleguen.
+     */
+    fun cargarPromoSesion() {
+        viewModelScope.launch {
+            if (uiState.promoDestacada != null) return@launch
+            val existente = promoSesion.promo
+            if (existente != null) {
+                uiState = uiState.copy(promoDestacada = existente)
+                return@launch
+            }
+            val activas = uiState.promociones.filter { it.activa && !it.estaExpirada() }
+            android.util.Log.d("PromoDebug", "cargarPromoSesion vm=${hashCode()} total=" + uiState.promociones.size + " activas=" + activas.size)
+            if (activas.isEmpty()) return@launch
+            val promo = siguientePromocion(activas)
+            android.util.Log.d("PromoDebug", "siguientePromocion=" + promo)
+            promoSesion.fijar(promo)
+            uiState = uiState.copy(promoDestacada = promo)
+        }
+    }
+
+    /**
+     * Lee las promociones guardadas.
+     *
+     * Antes de deserializar se completan los campos que se agregaron después
+     * (`productoIds`, `descuentoPorcentaje`): Gson no aplica los valores por
+     * defecto de Kotlin y dejaría esas listas en null.
+     */
+    private fun leerPromociones(json: String?): List<Promocion> {
+        android.util.Log.d("PromoDebug", "leerPromociones json=" + json)
+        if (json.isNullOrBlank()) return emptyList()
+        return try {
+            val array = gson.fromJson(json, JsonArray::class.java) ?: return emptyList()
+            array.forEach { elemento ->
+                if (elemento.isJsonObject) {
+                    val obj = elemento.asJsonObject
+                    if (!obj.has("productoIds")) obj.add("productoIds", JsonArray())
+                    if (!obj.has("descuentoPorcentaje")) obj.add("descuentoPorcentaje", JsonPrimitive(0))
+                }
+            }
+            gson.fromJson(array, object : TypeToken<List<Promocion>>() {}.type) ?: emptyList()
+        } catch (_: Exception) {
+            emptyList()
         }
     }
 

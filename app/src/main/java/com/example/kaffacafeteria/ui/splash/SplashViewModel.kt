@@ -14,7 +14,6 @@ import kotlinx.coroutines.launch
 data class SplashUiState(
     val isLoggedIn: Boolean = false,
     val isLoading: Boolean = true,
-    val showPromo: Boolean = false,
     val user: User? = null
 )
 
@@ -43,7 +42,6 @@ class SplashViewModel(application: Application) : AndroidViewModel(application) 
             uiState = SplashUiState(
                 isLoggedIn = loggedIn,
                 isLoading = false,
-                showPromo = true,
                 user = user
             )
         }

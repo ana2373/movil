@@ -189,7 +189,7 @@ fun AdminPanelScreen(
         AddBaristaDialog(
             roles = viewModel.uiState.roles,
             isLoading = viewModel.uiState.isLoading,
-            onDismiss = { showAddBarista = false },
+            onDismiss = { if (!viewModel.uiState.isLoading) showAddBarista = false },
             onConfirm = { nombre, correo, password, roleIds ->
                 viewModel.initCreateUser()
                 viewModel.updateUserFormNombre(nombre)
@@ -197,7 +197,9 @@ fun AdminPanelScreen(
                 viewModel.updateUserFormPassword(password)
                 viewModel.setUserRoles(roleIds)
                 viewModel.saveUser()
-                showAddBarista = false
+                if (!viewModel.uiState.isLoading) {
+                    showAddBarista = false
+                }
             }
         )
     }
@@ -353,6 +355,13 @@ fun AddBaristaDialog(
         mutableStateOf(roles.firstOrNull { it.nombre.equals("barista", ignoreCase = true) }?.let { setOf(it.id) } ?: emptySet())
     }
 
+    val baristaRoleId = roles.firstOrNull { it.nombre.equals("barista", ignoreCase = true) }?.id
+    LaunchedEffect(baristaRoleId) {
+        if (baristaRoleId != null && !selectedRoleIds.contains(baristaRoleId)) {
+            selectedRoleIds = setOf(baristaRoleId)
+        }
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Agregar Barista", fontWeight = FontWeight.Black) },
@@ -367,24 +376,43 @@ fun AddBaristaDialog(
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     singleLine = true, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant)
                 )
-                Text("Rol:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                roles.forEach { role ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = selectedRoleIds.contains(role.id), onCheckedChange = { checked -> selectedRoleIds = if (checked) selectedRoleIds + role.id else selectedRoleIds - role.id }, colors = CheckboxDefaults.colors(checkedColor = colorScheme.secondary))
-                        Text(role.nombre.replaceFirstChar { it.uppercase() })
+                Text("Rol asignado:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                Text("Barista (obligatorio)", style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
+                if (roles.isNotEmpty()) {
+                    Column {
+                        roles.forEach { role ->
+                            val isBaristaRole = role.nombre.equals("barista", ignoreCase = true)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(
+                                    checked = if (isBaristaRole) true else selectedRoleIds.contains(role.id),
+                                    enabled = isBaristaRole,
+                                    onCheckedChange = { checked ->
+                                        if (isBaristaRole) return@Checkbox
+                                        selectedRoleIds = if (checked) selectedRoleIds + role.id else selectedRoleIds - role.id
+                                    },
+                                    colors = CheckboxDefaults.colors(checkedColor = colorScheme.secondary)
+                                )
+                                Text(role.nombre.replaceFirstChar { it.uppercase() })
+                            }
+                        }
                     }
                 }
             }
         },
         confirmButton = {
+            val rolesToSend = selectedRoleIds.ifEmpty { baristaRoleId?.let { listOf(it) } ?: emptyList() }.toList()
             Button(
-                onClick = { onConfirm(nombre, correo, password, selectedRoleIds.toList()) },
-                enabled = nombre.isNotBlank() && correo.isNotBlank() && password.isNotBlank() && selectedRoleIds.isNotEmpty() && !isLoading,
+                onClick = { onConfirm(nombre.trim(), correo.trim(), password, rolesToSend) },
+                enabled = nombre.isNotBlank() && correo.isNotBlank() && password.isNotBlank() && rolesToSend.isNotEmpty() && !isLoading,
                 colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary, contentColor = colorScheme.onSecondary)
             ) {
-                Text("Guardar Barista", color = colorScheme.onSecondary)
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), color = colorScheme.onSecondary, strokeWidth = 2.dp)
+                } else {
+                    Text("Guardar Barista", color = colorScheme.onSecondary)
+                }
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss, enabled = !isLoading) { Text("Cancelar") } }
     )
 }

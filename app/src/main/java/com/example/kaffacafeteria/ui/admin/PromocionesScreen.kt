@@ -31,6 +31,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.kaffacafeteria.data.remote.dto.ProductoDto
+import com.example.kaffacafeteria.domain.model.Promocion
+import com.example.kaffacafeteria.domain.model.buildExpiracionMillis
+import com.example.kaffacafeteria.domain.model.estaExpirada
+import com.example.kaffacafeteria.domain.model.formatExpiracion
 import com.example.kaffacafeteria.ui.components.EmptyState
 import com.example.kaffacafeteria.ui.components.LoadingIndicator
 import com.example.kaffacafeteria.ui.theme.PromoPalettes
@@ -96,6 +101,7 @@ fun PromocionesScreen(
     if (mostrarDialogo) {
         PromocionDialog(
             inicial = promoEnEdicion,
+            productos = state.productos,
             onDismiss = { mostrarDialogo = false; promoEnEdicion = null },
             onConfirm = { promo ->
                 if (promoEnEdicion != null) viewModel.update(promo) else viewModel.create(promo)
@@ -175,6 +181,23 @@ private fun PromocionCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(promo.descripcion, style = MaterialTheme.typography.bodyMedium, color = palette.subtitleText)
             }
+
+            // Qué compra el cliente y con qué descuento.
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                buildString {
+                    append(if (promo.productoIds.isEmpty()) {
+                        "Productos: destacados del menú"
+                    } else {
+                        "Productos: ${promo.productoIds.size} elegido${if (promo.productoIds.size == 1) "" else "s"}"
+                    })
+                    if (promo.descuentoPorcentaje > 0) {
+                        append(" · ${promo.descuentoPorcentaje}% de descuento en el carrito")
+                    }
+                },
+                style = MaterialTheme.typography.labelSmall,
+                color = palette.subtitleText
+            )
 
             Spacer(modifier = Modifier.height(6.dp))
             if (promo.expiracionMillis != null) {
@@ -256,7 +279,8 @@ private fun TaskStatus(activa: Boolean, activaColor: Color, onClick: () -> Unit)
 private fun PromocionDialog(
     inicial: Promocion?,
     onDismiss: () -> Unit,
-    onConfirm: (Promocion) -> Unit
+    onConfirm: (Promocion) -> Unit,
+    productos: List<ProductoDto> = emptyList()
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val context = LocalContext.current
@@ -266,6 +290,8 @@ private fun PromocionDialog(
     var tipo by remember { mutableStateOf(inicial?.tipo ?: TIPOS_PROMOCION.first()) }
     var colorIndex by remember { mutableStateOf(inicial?.colorIndex ?: 0) }
     var imagenUri by remember { mutableStateOf(inicial?.imagenUri) }
+    var productoIds by remember { mutableStateOf(inicial?.productoIds ?: emptyList()) }
+    var descuento by remember { mutableStateOf(inicial?.descuentoPorcentaje ?: 0) }
 
     // Día y hora por separado; se combinan al guardar.
     var diaMillis by remember { mutableStateOf(inicial?.expiracionMillis) }
@@ -333,6 +359,100 @@ private fun PromocionDialog(
                             )
                         }
                     }
+                }
+
+                // ── Productos de la promoción ──
+                // El cliente compra la promoción en el carrito: estos son los
+                // productos que se agregan y los que reciben el descuento.
+                Column {
+                    Text(
+                        "Productos de la promoción",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        if (productoIds.isEmpty()) {
+                            "Sin elegir: se usarán los productos destacados del menú."
+                        } else {
+                            "${productoIds.size} producto${if (productoIds.size == 1) "" else "s"} elegido${if (productoIds.size == 1) "" else "s"}."
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    if (productos.isEmpty()) {
+                        Text(
+                            "No se pudo cargar el catálogo de productos.",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colorScheme.error
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.heightIn(max = 180.dp),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            items(productos, key = { it.id }) { producto ->
+                                val elegido = productoIds.contains(producto.id)
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            productoIds = if (elegido) {
+                                                productoIds - producto.id
+                                            } else {
+                                                productoIds + producto.id
+                                            }
+                                        }
+                                        .padding(vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        checked = elegido,
+                                        onCheckedChange = {
+                                            productoIds = if (elegido) {
+                                                productoIds - producto.id
+                                            } else {
+                                                productoIds + producto.id
+                                            }
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        producto.nombre,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        modifier = Modifier.weight(1f),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        "$" + "%.2f".format(producto.precioVenta.toDoubleOrNull() ?: 0.0),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // ── Descuento ──
+                Column {
+                    Text(
+                        "Descuento para el carrito: $descuento%",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Slider(
+                        value = descuento.toFloat(),
+                        onValueChange = { descuento = it.toInt() },
+                        valueRange = 0f..100f,
+                        steps = 19
+                    )
+                    Text(
+                        "Se aplica sobre los productos de la promoción al cobrar.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colorScheme.onSurfaceVariant
+                    )
                 }
 
                 Column {
@@ -464,7 +584,9 @@ private fun PromocionDialog(
                             imagenUri = imagenUri,
                             // Sólo hay vencimiento si se escogió día.
                             expiracionMillis = diaMillis?.let { buildExpiracionMillis(it, hora.first, hora.second) },
-                            activa = inicial?.activa ?: true
+                            activa = inicial?.activa ?: true,
+                            productoIds = productoIds,
+                            descuentoPorcentaje = descuento.coerceIn(0, 100)
                         )
                     )
                 },

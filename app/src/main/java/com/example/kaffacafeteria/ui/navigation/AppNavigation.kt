@@ -285,6 +285,14 @@ fun AppNavigation(
                     onNavigateToMermas = { requireAuth { navController.navigate(Screen.Mermas.route) } },
                     onNavigateToLogin = { navController.navigate(Screen.Login.route) },
                     onNavigateToChat = { requireAuth { navController.navigate(Screen.Chat.route) } },
+                    onComprarPromo = { promo, productos ->
+                        // La promoción se compra en el carrito: se agregan sus
+                        // productos con el precio de la promo y se abre el POS.
+                        requireAuth {
+                            cartStore.aplicarPromo(promo, productos)
+                            navController.navigate(Screen.POS.route)
+                        }
+                    },
                     onLogout = {
                         isLoggedIn = false
                         currentRole = null

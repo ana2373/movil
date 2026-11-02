@@ -12,6 +12,7 @@ import com.example.kaffacafeteria.data.remote.api.CatalogApi
 import com.example.kaffacafeteria.data.remote.api.OrderApi
 import com.example.kaffacafeteria.data.remote.dto.*
 import com.example.kaffacafeteria.domain.model.MedioPago
+import com.example.kaffacafeteria.domain.model.Promocion
 import com.example.kaffacafeteria.domain.model.User
 import com.example.kaffacafeteria.util.ApiErrors
 import com.example.kaffacafeteria.util.Resource
@@ -55,6 +56,12 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     val cartItems: List<CartItem> get() = cartStore.items
     val cartTotal: Double get() = cartStore.total
 
+    /** Promoción aplicada al carrito (la que da el precio promo a sus productos). */
+    val promoAplicada: Promocion? get() = cartStore.promoAplicada
+
+    /** Cuánto ahorra el cliente con la promoción aplicada. */
+    val ahorroPromo: Double get() = cartStore.ahorroPromo
+
     init {
         loadInitialData()
     }
@@ -91,7 +98,7 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             uiState = uiState.copy(isLoadingProductos = true)
             try {
-                val response = catalogApi.getProductos(perPage = 50)
+                val response = catalogApi.getProductos(perPage = 100)
                 if (response.isSuccessful) {
                     val data = response.body()!!
                     uiState = uiState.copy(
@@ -117,6 +124,16 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addToCart(producto: ProductoDto) {
         cartStore.add(producto)
+    }
+
+    /** Agrega al carrito los productos de la promoción y aplica su descuento. */
+    fun aplicarPromo(promo: Promocion, productos: List<ProductoDto>) {
+        cartStore.aplicarPromo(promo, productos)
+    }
+
+    /** Quita la promoción del carrito y vuelve al precio de lista. */
+    fun quitarPromo() {
+        cartStore.quitarPromo()
     }
 
     fun updateCantidad(productoId: Int, cantidad: Int) {
@@ -165,13 +182,14 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         val total = cartStore.total
+        // El precio que se envía es el de la promoción cuando la línea tiene
+        // descuento: así el total del pedido cuadra con el detalle.
         val detalles = cartStore.items.map { item ->
-            val precio = item.producto.precioVenta.toDoubleOrNull() ?: 0.0
             PedidoDetalleRequest(
                 productoId = item.producto.id,
                 cantidad = item.cantidad,
-                precioUnitario = precio,
-                subtotal = precio * item.cantidad
+                precioUnitario = item.precioUnitario,
+                subtotal = item.subtotal
             )
         }
 

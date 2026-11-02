@@ -28,6 +28,7 @@ Aplicación móvil Android para la gestión de una cafetería (punto de venta, i
 - **Caja:** apertura y cierre de caja con montos inicial/final y registro de movimientos.
 - **Chat interno:** mensajería entre usuarios con sondeo periódico.
 - **Panel administrativo:** KPIs del día, gráfica de ventas de 7 días, ranking de productos.
+- **Promociones y eventos:** pantalla emergente compacta al entrar al Inicio y al Carrito; la promoción se compra en el carrito con su precio y descuento (cálculo local, sin cambios en el backend).
 - **Gestión:** usuarios, categorías, productos, medios de pago, gastos, mermas, proveedores, compras e insumos.
 - **Tema oscuro/claro** persistente vía DataStore.
 - **Perfil:** edición de datos, carga de foto (multipart) y cambio de contraseña.
@@ -77,9 +78,12 @@ app/src/main/java/com/example/kaffacafeteria/
 ├── MainActivity.kt             # Punto de entrada, tema y modo edge-to-edge
 ├── domain/
 │   ├── model/DomainModels.kt   # User, Role, Product, Category, Order...
+│   ├── model/Promocion.kt      # Promoción local (vigencia, productos, descuento)
 │   └── repository/             # Interfaces Auth/Catalog/OrderRepository
 ├── data/
 │   ├── local/TokenManager.kt   # DataStore (token, dark_mode)
+│   ├── local/CartStore.kt      # Carrito en memoria + promoción aplicada
+│   ├── local/PromoSesion.kt    # Promoción del momento (Inicio y Carrito)
 │   ├── remote/
 │   │   ├── api/                # Auth, Catalog, Order, CashRegister, User,
 │   │   │                       # Transaction, Dashboard, Mensaje
@@ -95,10 +99,10 @@ app/src/main/java/com/example/kaffacafeteria/
 └── ui/
     ├── theme/                  # Color / Theme / Type (paleta café)
     ├── navigation/AppNavigation.kt
-    ├── components/             # CommonComponents, NavigationComponents
+    ├── components/             # CommonComponents, NavigationComponents, PromocionPopup
     └── screens/
         ├── auth/               # Login, Register
-        ├── splash/             # Splash + promos rotativas
+        ├── splash/             # Splash con el logo de Kaffa
         ├── home/               # Home (cliente/visitante)
         ├── profile/
         ├── productos/
@@ -116,14 +120,14 @@ app/src/main/java/com/example/kaffacafeteria/
 
 ### Configuración de Red
 
-- **Base URL:** `http://192.168.80.15:8000/api/v1/` (LAN local).
-- **Base de imágenes:** `http://192.168.80.15:8000/`.
+- **Base URL:** `http://kaffasena.tech/api/v1/` (backend en el VPS, HTTP puerto 80).
+- **Base de imágenes:** `http://kaffasena.tech/`.
 - **Interceptores:**
   - `AuthInterceptor` — inyecta `Authorization: Bearer <token>` (desde DataStore) y `Accept: application/json` en todas las peticiones.
   - `DebugInterceptor` — logging OkHttp a nivel `BODY` (siempre activo).
 - Timeouts de conexión/lectura: 30 s.
 
-> `usesCleartextTraffic="true"` está habilitado en el manifiesto al servirse el backend por HTTP plano.
+> `usesCleartextTraffic="true"` está habilitado en el manifiesto al servirse el backend por HTTP plano (sin TLS).
 
 ### Interfaces API (Retrofit)
 
@@ -199,6 +203,9 @@ Requisitos: **JDK 11+** y **Android SDK 36**.
 # Compilar APK de release
 ./gradlew assembleRelease
 
+# Compilar AAB de release (entrega / Play Store)
+./gradlew bundleRelease
+
 # Ejecutar tests unitarios
 ./gradlew test
 
@@ -206,7 +213,8 @@ Requisitos: **JDK 11+** y **Android SDK 36**.
 ./gradlew connectedAndroidTest
 ```
 
-El artefacto se genera en `app/build/outputs/apk/`.
+Los artefactos quedan en `app/build/outputs/apk/` (APK) y
+`app/build/outputs/bundle/release/` (AAB).
 
 > El APK de release se construye **sin optimización** (`optimization { enable = false }`): no se aplica R8/ProGuard, por lo que el binario no está reducido ni ofuscado.
 
@@ -234,30 +242,39 @@ keytool -genkeypair -v -keystore kaffa-release.jks -storetype PKCS12 \
 
 ### Configuración del backend
 
-El host del backend se compila dentro del APK y se lee de `local.properties`, así que no hay que tocar código para cambiarlo:
+El host y el puerto del backend se compilan dentro del APK/AAB y se leen de `local.properties`, así que no hay que tocar código para cambiarlos:
 
 ```properties
-# Vacío = detección automática
-KAFFA_API_HOST=192.168.80.15
+# Producción (VPS)
+KAFFA_API_HOST=kaffasena.tech
+KAFFA_API_PORT=80
+
+# Desarrollo local (ejemplo)
+# KAFFA_API_HOST=192.168.80.15
+# KAFFA_API_PORT=8000
 ```
 
-- **Vacío (por defecto):** `10.0.2.2` en emulador, `192.168.80.15` en celular físico.
-- **Con valor:** se usa tal cual (`host:puerto` si se incluye el puerto; por defecto `8000`).
+- **Vacío (por defecto):** `10.0.2.2:8000` en emulador, `127.0.0.1:8000` en celular físico.
+- **Con valor:** se usa tal cual; el puerto por defecto es `8000` y se omite `:80` en la URL.
 
-El valor llega al código como `BuildConfig.API_HOST` y lo consume `util/Constants.kt`. Tras cambiarlo hay que recompilar el APK.
+Los valores llegan al código como `BuildConfig.API_HOST` y `BuildConfig.API_PORT`, y los consume `util/Constants.kt`. Tras cambiarlos hay que recompilar el APK/AAB.
 
-### Entrega del APK
+### Entrega del APK/AAB
 
-Los APKs listos para subir a Classroom se copian en `entrega/` (ignorada por git):
+Los artefactos listos para entregar se copian en `entrega/` (ignorada por git):
 
 | Archivo | Descripción |
 |---|---|
-| `KaffaCafeteria-v1.0-release.apk` | Release firmado — **este es el que se sube** |
+| `KaffaCafeteria-v1.0-release.aab` | AAB firmado — **el que se entrega / sube a Play Store** |
+| `KaffaCafeteria-v1.0-vps.apk` | APK firmado con el mismo código, para instalar y probar en el teléfono |
+| `KaffaCafeteria-v1.0-release.apk` | APK release de la entrega inicial (LAN) |
 | `KaffaCafeteria-v1.0-debug.apk` | Variante debug, incluye los logs de red |
 
 **No subir `app-debug-androidTest.apk`**: es el APK de los tests instrumentados, no de la app.
 
-> Ojo: la app apunta a una IP local (`http://192.168.80.15:8000/api/v1/`). Quien instale el APK debe ejecutar el backend en esa dirección —usa la misma red Wi-Fi— para que la app funcione. Si el backend está en otra máquina, cambia `KAFFA_API_HOST` y recompila.
+> El `.aab` no se instala directamente en un teléfono; para probarlo se usa el APK o `bundletool`.
+>
+> La app apunta al backend del VPS (`http://kaffasena.tech/api/v1/`). Si cambia el dominio o el puerto, actualiza `KAFFA_API_HOST`/`KAFFA_API_PORT` en `local.properties` y recompila. Ver `docs/CHANGELOG-2026-11-01-DESPLIEGUE-VPS.md`.
 
 ## Testing
 
@@ -268,11 +285,12 @@ Ambos son plantillas por defecto; **no contienen lógica de negocio testeada**.
 
 ## Observaciones y Limitaciones
 
-1. **IP de red fija** (`192.168.80.15`) en la URL base: la app solo funciona en la red LAN contratada.
+1. **Host/puerto compilados en el paquete:** actualmente apunta a `http://kaffasena.tech/api/v1/` (VPS, HTTP sin TLS). Cambiar de servidor exige editar `local.properties` y recompilar.
 2. **Logging de red a nivel `BODY`** siempre activo (no hay separación debug/release).
 3. **Sin R8/ProGuard** en release → binario sin optimizar ni ofuscar.
 4. **Token en DataStore sin cifrar** a pesar de la dependencia `security-crypto`.
 5. **CRUD parcial:** categorías, productos y medios de pago solo permiten crear/eliminar; sin edición.
 6. **Pantallas placeholder:** `ReportsScreen` (sin funcionalidad) y `TurnosScreen` (solo en memoria).
 7. **Sondeo dependiente de ViewModels:** sin sincronización en segundo plano real al minimizar la app.
+8. **Cleartext HTTP:** el backend del VPS se publica sin TLS; se recomienda habilitar HTTPS.
 8. **Lógica duplicada** de carrito entre `POS` y `Client`, y llamadas repetidas de `getMediosPago`/`getCategorias`/`getProductos` en varios ViewModels.

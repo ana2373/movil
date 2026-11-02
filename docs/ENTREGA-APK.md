@@ -3,6 +3,11 @@
 Fecha: 2026-10-03
 Proyecto: `/home/ana/Documentos/Movil_kaffa/movil-master` (Kaffa Cafeteria, Android + Compose + Retrofit)
 
+> **Nota (2026-11-01):** este documento describe la entrega inicial del APK
+> contra un backend en la LAN (`192.168.80.15:8000`). El despliegue vigente
+> apunta al VPS `http://kaffasena.tech` y se entrega como AAB; consulta
+> [`CHANGELOG-2026-11-01-DESPLIEGUE-VPS.md`](CHANGELOG-2026-11-01-DESPLIEGUE-VPS.md).
+
 Este documento está pensado para que lo copies y lo entregues junto al APK.
 Los archivos de código ya están modificados en el proyecto: **no tienes que
 aplicar nada a mano**, solo leer y, si quieres, reejecutar los comandos.
