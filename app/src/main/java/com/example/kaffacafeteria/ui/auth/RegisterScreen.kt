@@ -98,9 +98,7 @@ fun RegisterScreen(
 
 /**
  * Pantalla mostrada tras crear la cuenta.
- *
- * Explica que el acceso se habilita al verificar el correo y ofrece reenviar
- * el enlace, porque el enlace puede tardar o perderse en el spam.
+ * Permite ingresar el código recibido por correo o reenviarlo si venció.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,59 +108,112 @@ private fun RegistrationPendingScreen(
     onIrAlLogin: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
+    val focusManager = LocalFocusManager.current
 
     Column(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
         TopAppBar(
-            title = { Text("Cuenta creada") },
-            navigationIcon = { IconButton(onClick = viewModel::volverAlFormulario) { Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = colorScheme.onPrimary) } },
+            title = { Text("Verificar Cuenta") },
+            navigationIcon = {
+                IconButton(onClick = viewModel::volverAlFormulario) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = colorScheme.onPrimary)
+                }
+            },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary, titleContentColor = colorScheme.onPrimary)
         )
         Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Surface(shape = androidx.compose.foundation.shape.CircleShape, color = colorScheme.secondary.copy(alpha = 0.15f), modifier = Modifier.size(88.dp)) {
+            Surface(
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = colorScheme.secondary.copy(alpha = 0.15f),
+                modifier = Modifier.size(88.dp)
+            ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(Icons.Default.MarkEmailRead, contentDescription = null, tint = colorScheme.secondary, modifier = Modifier.size(44.dp))
                 }
             }
-            Text("¡Casi listo!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = colorScheme.onBackground)
+
+            Text("¡Ingresa tu código!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = colorScheme.onBackground)
+
             Text(
                 state.mensajeVerificacion
-                    ?: "Te enviamos un correo para verificar tu cuenta.",
+                    ?: "Enviamos un código de verificación a tu correo. Ingrésalo a continuación para activar tu cuenta.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
+
             if (state.correoRegistrado.isNotBlank()) {
                 Card(shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = colorScheme.surface)) {
-                    Column(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Enviado a", style = MaterialTheme.typography.labelSmall, color = colorScheme.onSurfaceVariant)
+                    Column(modifier = Modifier.fillMaxWidth().padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Código enviado a", style = MaterialTheme.typography.labelSmall, color = colorScheme.onSurfaceVariant)
                         Text(state.correoRegistrado, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                     }
                 }
             }
+
+            // =========================================================================
+            // CAMPO PARA INGRESAR EL CÓDIGO
+            // =========================================================================
+            OutlinedTextField(
+                value = state.codigoVerificacion, // Asegúrate de tener esta propiedad en tu State
+                onValueChange = viewModel::updateCodigoVerificacion, // Asegúrate de implementar este método en tu ViewModel
+                label = { Text("Código de verificación") },
+                leadingIcon = { Icon(Icons.Default.Pin, contentDescription = null) },
+                isError = state.codigoError != null,
+                supportingText = state.codigoError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = {
+                    focusManager.clearFocus()
+                    viewModel.verificarCodigo()
+                }),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = colorScheme.primary,
+                    focusedLabelColor = colorScheme.primary,
+                    cursorColor = colorScheme.primary,
+                    unfocusedBorderColor = colorScheme.outline,
+                    unfocusedLabelColor = colorScheme.onSurfaceVariant
+                )
+            )
+
             if (state.error != null) {
                 Text(state.error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
             }
+
+            // BOTÓN DE CONFIRMAR CÓDIGO
             Button(
+                onClick = { viewModel.verificarCodigo() },
+                enabled = !state.isVerifying && state.codigoVerificacion.isNotBlank(),
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary, contentColor = colorScheme.onPrimary)
+            ) {
+                if (state.isVerifying) CircularProgressIndicator(modifier = Modifier.size(22.dp), color = colorScheme.onPrimary, strokeWidth = 2.dp)
+                else Text("Confirmar Código", color = colorScheme.onPrimary, textAlign = TextAlign.Center)
+            }
+
+            // BOTÓN DE REENVIAR CORREO
+            OutlinedButton(
                 onClick = { viewModel.reenviarVerificacion() },
                 enabled = !state.isResending,
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary, contentColor = colorScheme.onSecondary)
-            ) {
-                if (state.isResending) CircularProgressIndicator(modifier = Modifier.size(22.dp), color = colorScheme.onSecondary, strokeWidth = 2.dp)
-                else Text("Reenviar correo de verificación", color = colorScheme.onSecondary, textAlign = TextAlign.Center)
-            }
-            OutlinedButton(
-                onClick = onIrAlLogin,
                 modifier = Modifier.fillMaxWidth().height(52.dp)
             ) {
-                Text("Ir a iniciar sesión", color = colorScheme.primary)
+                if (state.isResending) CircularProgressIndicator(modifier = Modifier.size(22.dp), color = colorScheme.primary, strokeWidth = 2.dp)
+                else Text("Reenviar código de verificación", color = colorScheme.primary, textAlign = TextAlign.Center)
             }
+
             TextButton(onClick = viewModel::editarCorreo) {
                 Text("Usar otro correo", color = colorScheme.onSurfaceVariant)
+            }
+
+            TextButton(onClick = onIrAlLogin) {
+                Text("Ir a iniciar sesión", color = colorScheme.primary)
             }
         }
     }

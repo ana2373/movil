@@ -126,7 +126,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             uiState = LoginUiState()
         }
     }
-    fun verificarCodigo(codigo: String){
+    fun verificarCodigo(codigo: String) {
         val correo = uiState.correo.trim()
         if (correo.isBlank() || uiState.isVerifying) return
     }

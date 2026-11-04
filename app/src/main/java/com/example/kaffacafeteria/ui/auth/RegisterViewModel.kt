@@ -32,7 +32,12 @@ data class RegisterUiState(
     val nombreError: String? = null,
     val correoError: String? = null,
     val passwordError: String? = null,
-    val confirmPasswordError: String? = null
+    val confirmPasswordError: String? = null,
+    val codigoVerificacion: String = "",
+
+    val codigoError: String? = null,
+
+    val isVerifying: Boolean = false
 )
 
 class RegisterViewModel(application: Application) : AndroidViewModel(application) {
@@ -137,6 +142,12 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
     /** Vuelve al formulario tras la pantalla de confirmación. */
     fun volverAlFormulario() {
         uiState = RegisterUiState()
+    }
+    fun updateCodigoVerificacion(codigo: String) {
+        uiState = uiState.copy(codigoVerificacion = codigo, codigoError = null)
+    }
+    fun verificarCodigo() {
+        // Llamada a API backend enviando state.correoRegistrado y state.codigoVerificacion
     }
 
     /** Permite corregir el correo y reintentar el registro. */
