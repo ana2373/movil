@@ -23,7 +23,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.kaffacafeteria.ui.theme.*
 import com.example.kaffacafeteria.util.createViewModel
-
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 @Composable
 fun LoginScreen(
     onLoginSuccess: (com.example.kaffacafeteria.domain.model.User?) -> Unit,
@@ -34,6 +39,7 @@ fun LoginScreen(
     val state = viewModel.uiState
     val colorScheme = MaterialTheme.colorScheme
     var passwordVisible by remember { mutableStateOf(false) }
+    var codigoVerificacion by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(state.isLoggedIn) {
@@ -109,17 +115,74 @@ fun LoginScreen(
         // Cuenta creada pero sin verificar: se ofrece reenviar el enlace en
         // lugar de dejar al usuario atascado en un error de acceso.
         if (state.emailSinVerificar) {
-            Spacer(modifier = Modifier.height(12.dp))
-            OutlinedButton(
-                onClick = viewModel::reenviarVerificacion,
-                enabled = !state.isResending,
-                modifier = Modifier.fillMaxWidth().height(48.dp)
+
+            Text(
+                text = "Verificación de correo",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = "Tu correo todavía no está verificado. Ingresa el código de 6 dígitos que enviamos a tu correo electrónico.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            OutlinedTextField(
+                value = codigoVerificacion,
+                onValueChange = { valor ->
+                    if (valor.length <= 6 && valor.all { it.isDigit() }) {
+                        codigoVerificacion = valor
+                    }
+                },
+                label = { Text("Código de verificación") },
+                placeholder = { Text("000000") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Button(
+                onClick = {
+                    viewModel.verificarCodigo(codigoVerificacion)
+                },
+                enabled = codigoVerificacion.length == 6 && !state.isVerifying,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (state.isVerifying) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Verificar código")
+                }
+            }
+
+            TextButton(
+                onClick = {
+                    viewModel.reenviarVerificacion()
+                    codigoVerificacion = ""
+                },
+                enabled = !state.isResending
             ) {
                 if (state.isResending) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp
+                    )
                 } else {
-                    Text("Reenviar correo de verificación", color = colorScheme.primary)
+                    Text("Reenviar código")
                 }
+            }
+
+            state.mensajeVerificacion?.let { mensaje ->
+                Text(
+                    text = mensaje,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
 

@@ -29,13 +29,13 @@ Lo que hice:
 
 Comprobé los endpoints con `curl` antes de recompilar:
 
-| Prueba | Resultado |
-|---|---|
-| `GET http://kaffasena.tech/` | `200` (frontend desplegado) |
-| `GET http://kaffasena.tech/api/v1/categorias` | `200` (JSON de Laravel) |
-| `GET http://kaffasena.tech/docs` | `200` (lo responde el frontend) |
-| `GET https://kaffasena.tech/` | sin respuesta (HTTPS no habilitado) |
-| `GET http://kaffasena.tech:8000/api/v1/` | timeout (puerto 8000 no expuesto) |
+| Prueba                                        | Resultado                           |
+| --------------------------------------------- | ----------------------------------- |
+| `GET http://kaffasena.tech/`                  | `200` (frontend desplegado)         |
+| `GET http://kaffasena.tech/api/v1/categorias` | `200` (JSON de Laravel)             |
+| `GET http://kaffasena.tech/docs`              | `200` (lo responde el frontend)     |
+| `GET https://kaffasena.tech/`                 | sin respuesta (HTTPS no habilitado) |
+| `GET http://kaffasena.tech:8000/api/v1/`      | timeout (puerto 8000 no expuesto)   |
 
 Conclusión: el backend se consume por **HTTP en el puerto 80**, bajo la ruta
 `/api/v1` (el mismo origen que el frontend). No se debe usar el puerto `8000`

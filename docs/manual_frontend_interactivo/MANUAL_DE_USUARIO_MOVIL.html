@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MANUAL_DE_USUARIO_MOVIL - Kaffa (Solo Frontend)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2F6B3F;
+            --secondary: #3E2C1C;
+            --bg: #F7F5F2;
+            --panel: #FFFFFF;
+            --text: #1F1F1F;
+            --text-light: #4F4F4F;
+            --border: #E5E0DA;
+            --accent: #8FBF9F;
+            --warn: #B08968;
+        }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 72px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 10;
+            box-shadow: 0 10px 40px rgba(47, 107, 63, 0.18);
+        }
+        header .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        header .brand-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+        }
+        header .brand-text h1 {
+            margin: 0;
+            font-size: 18px;
+        }
+        header .brand-text p {
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.85;
+        }
+        header .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        header .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.16);
+            border-radius: 999px;
+            padding: 8px 16px;
+        }
+        header .search-box input {
+            background: transparent;
+            border: none;
+            color: white;
+            outline: none;
+            min-width: 240px;
+        }
+        header .search-box input::placeholder {
+            color: rgba(255,255,255,0.8);
+        }
+        .layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 0;
+            padding-top: 72px;
+            min-height: 100vh;
+        }
+        nav {
+            position: sticky;
+            top: 72px;
+            height: calc(100vh - 72px);
+            overflow-y: auto;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            padding: 24px 22px;
+        }
+        nav::-webkit-scrollbar {
+            width: 8px;
+        }
+        nav::-webkit-scrollbar-thumb {
+            background: rgba(47, 107, 63, 0.25);
+            border-radius: 8px;
+        }
+        nav .nav-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--text-light);
+            margin: 0 0 12px 8px;
+        }
+        nav ul {
+            list-style: none;
+            margin: 0 0 24px 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        nav a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-decoration: none;
+            color: var(--text);
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+        nav a:hover {
+            background: rgba(47, 107, 63, 0.08);
+        }
+        nav a.active {
+            background: linear-gradient(90deg, rgba(47, 107, 63, 0.16), transparent);
+            color: var(--primary);
+            font-weight: 600;
+        }
+        nav .subnav {
+            margin-left: 18px;
+            margin-top: -2px;
+            gap: 4px;
+        }
+        nav .subnav a {
+            font-size: 13px;
+            padding: 8px 10px;
+        }
+        main {
+            padding: 40px clamp(24px, 6vw, 88px);
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+        .hero {
+            background: radial-gradient(circle at top right, rgba(143, 191, 159, 0.25), transparent), var(--panel);
+            border-radius: 28px;
+            border: 1px solid var(--border);
+            box-shadow: 0 60px 120px -80px rgba(47, 107, 63, 0.9);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+        .hero-content {
+            padding: clamp(28px, 6vw, 64px);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .hero-badge {
+            align-self: flex-start;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: rgba(47, 107, 63, 0.14);
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .hero h2 {
+            margin: 0;
+            font-size: clamp(34px, 6vw, 64px);
+            line-height: 1.05;
+        }
+        .hero p {
+            margin: 0;
+            max-width: 560px;
+            color: var(--text-light);
+            font-size: clamp(16px, 2vw, 18px);
+        }
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .meta-pill {
+            padding: 8px 16px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.8);
+            font-size: 14px;
+        }
+        .hero-visual {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: clamp(24px, 6vw, 64px);
+        }
+        .hero-card {
+            width: min(420px, 90%);
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 80px 160px -120px rgba(62, 44, 28, 0.8);
+        }
+        .hero-card img {
+            width: 100%;
+            display: block;
+        }
+        section {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+        .section-header {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .section-header .eyebrow {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--primary);
+        }
+        .section-header h2 {
+            margin: 0;
+            font-size: clamp(28px, 4vw, 44px);
+        }
+        .section-header p {
+            margin: 0;
+            color: var(--text-light);
+            max-width: 760px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 22px;
+        }
+        .card {
+            background: var(--panel);
+            border-radius: 22px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 40px 80px -70px rgba(47, 107, 63, 0.6);
+        }
+        .card-media {
+            position: relative;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+        }
+        .card-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: clamp(22px, 4vw, 30px);
+        }
+        .card-body header {
+            position: static;
+            height: auto;
+            background: none;
+            color: var(--text);
+            box-shadow: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .card-body header .step {
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(47, 107, 63, 0.12);
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .card-body header h3 {
+            margin: 0;
+            font-size: clamp(20px, 3vw, 26px);
+        }
+        .card-body p {
+            margin: 0;
+            color: var(--text-light);
+        }
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        .list li {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .list-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-top: 10px;
+            background: var(--primary);
+            box-shadow: 0 0 0 8px rgba(47, 107, 63, 0.08);
+        }
+        .list-content strong {
+            display: block;
+        }
+        .list-content span {
+            color: var(--text-light);
+        }
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            background: var(--panel);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 720px;
+        }
+        thead {
+            background: rgba(47, 107, 63, 0.08);
+        }
+        th, td {
+            text-align: left;
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .note {
+            border-radius: 18px;
+            border: 1px solid rgba(176, 137, 104, 0.4);
+            background: rgba(176, 137, 104, 0.12);
+            padding: clamp(18px, 4vw, 26px);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        footer {
+            margin-top: 40px;
+            padding: 28px clamp(24px, 6vw, 88px);
+            background: var(--panel);
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        footer strong {
+            font-size: 16px;
+        }
+        footer span {
+            color: var(--text-light);
+        }
+        [data-lightbox] {
+            cursor: zoom-in;
+        }
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 15, 15, 0.88);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 20;
+        }
+        .lightbox.active {
+            display: flex;
+        }
+        .lightbox img {
+            max-width: min(1100px, 95vw);
+            max-height: min(900px, 90vh);
+            border-radius: 18px;
+            box-shadow: 0 120px 200px -160px rgba(255,255,255,0.4);
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: rgba(255,255,255,0.18);
+            border: none;
+            color: white;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        @media (max-width: 1080px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+            nav {
+                position: static;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+            nav .nav-group {
+                flex: 1 1 260px;
+            }
+            header .search-box {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="brand-logo">KF</div>
+            <div class="brand-text">
+                <h1>MANUAL_DE_USUARIO_MOVIL</h1>
+                <p>Kaffa · Solo Frontend · Modo Interactivo</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div class="search-box">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/>
+                    <path d="M12.5 12.5L16 16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+                <input id="manual-search" type="search" placeholder="Buscar en el manual... (secciones, pantallas, acciones)">
+            </div>
+            <div class="meta-pill" style="border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.16); color: white;">Versión 1.0 · Solo Frontend</div>
+        </div>
+    </header>
+    <div class="layout">
+        <nav id="side-nav">
+            <div class="nav-group">
+                <p class="nav-title">Inicio</p>
+                <ul>
+                    <li><a href="#portada">Portada</a></li>
+                    <li><a href="#objetivo">Objetivo, alcance y público</a></li>
+                    <li><a href="#mapa-navegacion">Mapa de navegación</a></li>
+                </ul>
+            </div>
+            <div class="nav-group">
+                <p class="nav-title">Autenticación</p>
+                <ul>
+                    <li><a href="#splash">Splash / Carga inicial</a></li>
+                    <li><a href="#login">Login</a></li>
+                    <li><a href="#registro">Registro de cliente</a></li>
+                    <li><a href="#recuperar">Recuperar contraseña (Deep Link)</a></li>
+                </ul>
+            </div>
+            <div class="nav-group">
+                <p class="nav-title">Rol Cliente</p>
+                <ul>
+                    <li><a href="#cliente-home">Home / Pantalla principal</a></li>
+                    <li><a href="#cliente-busqueda">Búsqueda, categorías y destacados</a></li>
+                    <li><a href="#cliente-producto">Detalle de producto</a></li>
+                    <li><a href="#cliente-carrito">Carrito y pago (UI)</a></li>
+                    <li><a href="#cliente-pedidos">Mis pedidos y seguimiento</a></li>
+                    <li><a href="#cliente-perfil-chat">Perfil, Chat y Promociones/Eventos</a></li>
+                </ul>
+            </div>
+            <div class="nav-group">
+                <p class="nav-title">Rol Barista</p>
+                <ul>
+                    <li><a href="#barista-panel">Panel del Barista</a></li>
+                    <li><a href="#barista-kanban">Kanban de comandas</a></li>
+                    <li><a href="#barista-comanda">Detalle de comanda</a></li>
+                    <li><a href="#barista-turno-caja">Turno, Caja y POS (Barista)</a></li>
+                </ul>
+            </div>
+            <div class="nav-group">
+                <p class="nav-title">Rol Administrador</p>
+                <ul>
+                    <li><a href="#admin-panel">Panel de Administración</a></li>
+                    <li><a href="#admin-catalogo">Catálogo (Productos / Categorías)</a></li>
+                    <li><a href="#admin-usuarios">Usuarios</a></li>
+                    <li><a href="#admin-medios">Métodos de pago</a></li>
+                    <li><a href="#admin-promos-eventos">Promociones y Eventos</a></li>
+                    <li><a href="#admin-reportes">Reportes y Archivados</a></li>
+                    <li><a href="#admin-gestion">Compras / Insumos / Proveedores / Mermas / Gastos / Turnos / Caja</a></li>
+                </ul>
+            </div>
+            <div class="nav-group">
+                <p class="nav-title">Comunes y Guía</p>
+                <ul>
+                    <li><a href="#comunes-ux">Elementos comunes y UX</a></li>
+                    <li><a href="#guia-rapida">Guía rápida por tarea</a></li>
+                    <li><a href="#glosario">Glosario</a></li>
+                    <li><a href="#anexos">Anexos (Pantallas, Rutas, Capturas)</a></li>
+                </ul>
+            </div>
+        </nav>
+        <main>
+            <article id="portada" class="hero">
+                <div class="hero-content">
+                    <span class="hero-badge">MANUAL DE USUARIO MÓVIL · SOLO FRONTEND</span>
+                    <h2>MANUAL_DE_USUARIO_MOVIL</h2>
+                    <p>Manual técnico-pragmático, ultra explicado, interactivo y pensado para que cualquier persona pueda usar el frontend de la app móvil Kaffa sin conocimientos previos. Se documenta únicamente lo visible e interactuable desde la interfaz.</p>
+                    <div class="hero-meta">
+                        <span class="meta-pill">Aplicación: Kaffa (Android · Jetpack Compose)</span>
+                        <span class="meta-pill">Alcance: ÚNICAMENTE FRONTEND</span>
+                        <span class="meta-pill">Formato: HTML Interactivo + PDF + DOCX</span>
+                        <span class="meta-pill">Capturas: Reales desde doImagenes_manual/</span>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <figure class="hero-card">
+                        <img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2017-49-31.png" alt="Logo / Presentación de Kaffa">
+                    </figure>
+                </div>
+            </article>
+
+            <section id="objetivo">
+                <div class="section-header">
+                    <span class="eyebrow">1. Objetivo, alcance y público</span>
+                    <h2>¿Para qué sirve este manual?</h2>
+                    <p>Guiar paso a paso el uso del frontend de Kaffa por rol, mostrando pantallas, acciones, botones, flujos visuales y resultados esperados. No se documenta lógica de negocio, repositorios, DTOs ni endpoints.</p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Objetivo</span>
+                                <h3>Aprender usando la app</h3>
+                            </header>
+                            <p>Explicar de forma clara, directa y visual cómo interactuar con cada pantalla: navegación, autenticación, carrito, pedidos, paneles por rol y elementos comunes.</p>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Orientado a novatos</strong><span>Lenguaje coloquial, pasos numerados y "acción → resultado".</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Solo lo que se ve</strong><span>Se centra en UI, rutas, diálogos, estados visuales.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Interactivo</strong><span>Navegación lateral, búsqueda, lightbox para ampliar capturas.</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Alcance</span>
+                                <h3>Qué cubre / qué NO cubre</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>SÍ: Frontend</strong><span>Splash, Login/Register/ForgotPassword, Home/Client, Productos, Carrito/POS (vista), Pedidos, Perfil, Chat, Barista (Panel/Kanban/Caja), Admin (Panel/Catálogo/Usuarios/Reportes/Gestión), Componentes, Tema claro/oscuro.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>NO: Backend</strong><span>API, validaciones de servidor, repositorios, mapeo DTO, reglas de negocio, base de datos.</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Público</span>
+                                <h3>Usuarios a los que va dirigido</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Cliente</strong><span>Aprende a registrarse, pedir, pagar visualmente, seguir su pedido.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Barista</strong><span>Aprende a gestionar comandas en Kanban, turno/caja desde UI.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Administrador</strong><span>Conoce el panel y todas las secciones visibles.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Capacitación</strong><span>Ideal para inducción o consulta rápida.</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="mapa-navegacion">
+                <div class="section-header">
+                    <span class="eyebrow">2. Mapa de navegación</span>
+                    <h2>Rutas, redirecciones y Bottom Bar</h2>
+                    <p>Basado en <code>ui/navigation/AppNavigation.kt</code>. Se muestra el flujo visible según rol.</p>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ruta (Screen)</th>
+                                <th>Uso (Frontend)</th>
+                                <th>Notas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Splash</strong> (splash)</td><td>Pantalla de carga inicial</td><td>Decide redirección según rol/estado.</td></tr>
+                            <tr><td><strong>Home</strong> (home)</td><td>Inicio genérico / vista con accesos rápidos</td><td>Puede mostrar accesos a Admin/Barista si aplica.</td></tr>
+                            <tr><td><strong>ClientHome</strong> (client_home)</td><td>Vista cliente alternativa</td><td>Acceso a "Mis pedidos".</td></tr>
+                            <tr><td><strong>BaristaHome</strong> (barista_home)</td><td>Panel del Barista</td><td>Accesos a Insumos/Chat/Caja/Pedidos/Perfil.</td></tr>
+                            <tr><td><strong>Login</strong> (login) / <strong>Register</strong> (register) / <strong>ForgotPassword</strong> (forgot_password)</td><td>Autenticación</td><td>Deep link <code>kaffa://reset-password?token=...&correo=...</code> navega a ForgotPassword.</td></tr>
+                            <tr><td><strong>POS</strong> (pos)</td><td>Punto de venta / Carrito-Venta</td><td>Usado por cliente y barista según flujo.</td></tr>
+                            <tr><td><strong>Orders</strong> / <strong>OrderDetail</strong> (orders / orders/{pedidoId})</td><td>Mis Pedidos / Detalle</td><td>Requiere autenticación visualmente.</td></tr>
+                            <tr><td><strong>Productos</strong> (productos)</td><td>Listado de productos</td><td>Permite agregar al carrito (requiere auth).</td></tr>
+                            <tr><td><strong>Chat</strong> (chat)</td><td>Chat</td><td>Requiere autenticación.</td></tr>
+                            <tr><td><strong>Profile</strong> (profile)</td><td>Perfil + tema claro/oscuro</td><td>Requiere autenticación.</td></tr>
+                            <tr><td><strong>AdminPanel</strong> + rutas admin/*</td><td>Panel y secciones de administración</td><td>Visible según rol.</td></tr>
+                            <tr><td><strong>Gestion (Compras/Insumos/Proveedores/Mermas/Gastos/Turnos)</strong></td><td>Gestión</td><td>Secciones accesibles desde paneles.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="note">
+                    <strong>Bottom Navigation (Cliente)</strong>
+                    <span>Inicio · Pedidos · Carrito (POS) · Productos · Chat. Las rutas Pedidos/POS/Chat muestran comportamiento que requiere autenticación visualmente.</span>
+                </div>
+            </section>
+
+            <section id="splash">
+                <div class="section-header">
+                    <span class="eyebrow">3. Autenticación</span>
+                    <h2>Splash / Pantalla de carga inicial</h2>
+                    <p>Pantalla <code>ui/splash/SplashScreen.kt</code></p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2017-49-31.png" alt="Splash / Logo Kaffa"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Descripción</span>
+                                <h3>Bienvenida</h3>
+                            </header>
+                            <p>Al abrir la app se muestra el logo/marca Kaffa. Tras la verificación visual de estado, la app redirige al destino según rol o a Home/Login según corresponda.</p>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Acción</strong><span>Esperar carga inicial.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Resultado</strong><span>Redirección automática al panel correspondiente.</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="login">
+                <div class="section-header">
+                    <span class="eyebrow">Login</span>
+                    <h2>Inicio de sesión</h2>
+                    <p>Pantalla <code>ui/auth/LoginScreen.kt</code></p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2020-51-56.png" alt="Pantalla de Login"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Paso a paso</span>
+                                <h3>Iniciar sesión</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>1. Correo electrónico</strong><span>Escribir el correo registrado.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>2. Contraseña</strong><span>Escribir la contraseña (se puede mostrar/ocultar con el ícono).</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>3. Olvidé mi contraseña</strong><span>Botón "¿Olvidaste tu contraseña?" → Navega a recuperación.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>4. Iniciar Sesión</strong><span>Botón "Iniciar Sesión". Si éxito, redirige al Home/panel según rol.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>5. Registrarse</strong><span>Texto "¿No tienes cuenta? Regístrate" → Navega a Registro.</span></div></li>
+                            </ul>
+                            <div class="note">
+                                <strong>Nota visual</strong>
+                                <span>Si la cuenta no está verificada, aparece opción "Reenviar correo de verificación".</span>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="registro">
+                <div class="section-header">
+                    <span class="eyebrow">Registro</span>
+                    <h2>Registro de cliente</h2>
+                    <p>Pantalla <code>ui/auth/RegisterScreen.kt</code></p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2020-52-05.png" alt="Pantalla de Registro"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Paso a paso</span>
+                                <h3>Crear cuenta</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>1. Ir a Registro</strong><span>Desde Login → "Registrarse".</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>2. Completar campos</strong><span>Nombre completo, Correo electrónico, Contraseña.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>3. Crear cuenta</strong><span>Pulsar "Crear cuenta".</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>4. Verificación</strong><span>Revisar correo para activar cuenta. Tras registro, suele volver a Login.</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="recuperar">
+                <div class="section-header">
+                    <span class="eyebrow">Recuperación</span>
+                    <h2>Recuperar contraseña con Deep Link</h2>
+                    <p>Pantalla <code>ui/auth/ForgotPasswordScreen.kt</code> · <code>MainActivity.kt</code> (DeepLinks)</p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Flujo visual</span>
+                                <h3>kaffa://reset-password</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>1. Solicitar enlace</strong><span>Desde Login → "¿Olvidaste tu contraseña?" → Enviar solicitud.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>2. Abrir enlace</strong><span>Al abrir el enlace <code>kaffa://reset-password?token=...&correo=...</code> la app lo parsea.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>3. Restablecer</strong><span>Navega a pantalla de restablecer contraseña con token/correo precargados.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>4. Volver a Login</strong><span>Tras restablecer correctamente, vuelve a Login limpio.</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="cliente-home">
+                <div class="section-header">
+                    <span class="eyebrow">4. Rol Cliente</span>
+                    <h2>Home / Pantalla principal</h2>
+                    <p>Pantallas <code>ui/home/HomeScreen.kt</code> / <code>ui/cliente/ClientScreen.kt</code></p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2020-52-47.png" alt="Pantalla Principal Cliente"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Elementos</span>
+                                <h3>Cabecera y accesos</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Marca "Kaffa"</strong><span>Identidad visual.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Saludo</strong><span>"Hola, [Nombre]" o "¡Bienvenido!" si invitado.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Accesos rápidos</strong><span>Según rol/estado (Perfil, Mis pedidos, Carrito, etc.).</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Promociones/Eventos</strong><span>Icono para volver a abrir popup si existe.</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="cliente-busqueda">
+                <div class="section-header">
+                    <span class="eyebrow">Exploración</span>
+                    <h2>Búsqueda, categorías y destacados</h2>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2020-52-55.png" alt="Barra de búsqueda"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Búsqueda</span>
+                                <h3>Filtrar productos</h3>
+                            </header>
+                            <p>Escribir el nombre del producto → Filtrado visual instantáneo.</p>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2020-53-10.png" alt="Categorías"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Categorías</span>
+                                <h3>Navegación horizontal</h3>
+                            </header>
+                            <p>Deslizar horizontalmente. Seleccionar categoría para filtrar o "Todos" para ver todo.</p>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2020-53-17.png" alt="Productos destacados"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Destacados</span>
+                                <h3>Productos / Promociones</h3>
+                            </header>
+                            <p>Vista con imagen, nombre, precio. Al pulsar se va a detalle o se puede agregar según flujo.</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="cliente-producto">
+                <div class="section-header">
+                    <span class="eyebrow">Compra</span>
+                    <h2>Detalle de producto</h2>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2020-53-23.png" alt="Detalle producto"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Pantalla detalle</span>
+                                <h3>Ver y preparar para agregar</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Imagen, nombre, precio</strong><span>Información visible.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Personalización (si aplica)</strong><span>Opciones visibles según producto.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Cantidad</strong><span>Botones + / - para ajustar.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Agregar al carrito</strong><span>Botón para añadir producto.</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="cliente-carrito">
+                <div class="section-header">
+                    <span class="eyebrow">Carrito</span>
+                    <h2>Carrito, revisión y pago (UI)</h2>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2020-53-44.png" alt="Agregar al carrito"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Agregar</span>
+                                <h3>Agregar producto</h3>
+                            </header>
+                            <p>Tras configurar cantidad/opciones, pulsar "Agregar al carrito".</p>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2020-53-53.png" alt="Carrito de compras"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Revisar</span>
+                                <h3>Carrito</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Listado</strong><span>Productos, cantidad, precio, personalizaciones.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Modificar</strong><span>+/- o eliminar.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Total</strong><span>Se muestra el total.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Proceder al pago</strong><span>Ir a seleccionar método de pago.</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2020-54-05.png" alt="Finalizar compra"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Pago (UI)</span>
+                                <h3>Métodos de pago</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Efectivo</strong><span>Opción visible.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Transferencia</strong><span>Opción con subida/adjunto de comprobante (UI).</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Confirmar pedido</strong><span>Completa el flujo visual.</span></div></li>
+                            </ul>
+                            <div class="note">
+                                <strong>Importante</strong>
+                                <span>Solo se documenta interfaz. No se detalla lógica de cobro.</span>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="cliente-pedidos">
+                <div class="section-header">
+                    <span class="eyebrow">Seguimiento</span>
+                    <h2>Mis pedidos y estados</h2>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2020-54-15.png" alt="Mis pedidos"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Historial</span>
+                                <h3>Seguimiento en tiempo real (UI)</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Acceso</strong><span>Menú / BottomBar "Pedidos" o desde Home.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Estados</strong><span>Recibido · En preparación · Listo para recoger/entregar · Entregado.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Detalle</strong><span>Pulsar pedido para ver detalle.</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="cliente-perfil-chat">
+                <div class="section-header">
+                    <span class="eyebrow">Extras cliente</span>
+                    <h2>Perfil, Chat, Promociones y Eventos</h2>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Perfil</span>
+                                <h3><code>ui/profile/ProfileScreen.kt</code></h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Datos</strong><span>Información de perfil visible.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Tema claro/oscuro</strong><span>Interruptor para cambiar tema.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Cerrar sesión</strong><span>Opción para salir.</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Chat</span>
+                                <h3><code>ui/chat/ChatScreen.kt</code></h3>
+                            </header>
+                            <p>Acceso desde BottomBar "Chat" (requiere autenticación). Interfaz para conversación visible.</p>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Popups</span>
+                                <h3>Promociones / Eventos</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Automático</strong><span>Al entrar a Home/cliente pueden mostrarse popups.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Reabrir</strong><span>Icono "Promociones y eventos" permite volver a abrir.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Detalle</strong><span>Pantalla/dialogo con información visual.</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="barista-panel">
+                <div class="section-header">
+                    <span class="eyebrow">5. Rol Barista</span>
+                    <h2>Panel del Barista</h2>
+                    <p><code>ui/barista/BaristaPanelScreen.kt</code></p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2021-00-02.png" alt="Panel Barista"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Vista</span>
+                                <h3>Panel principal</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Accesos rápidos</strong><span>Insumos, Chat, Caja, Pedidos/Historial, Perfil.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Comandas</strong><span>Vista general de pedidos entrantes.</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="barista-kanban">
+                <div class="section-header">
+                    <span class="eyebrow">Kanban</span>
+                    <h2>Gestión de comandas por estado</h2>
+                    <p><code>ui/barista/BaristaPanelScreen.kt</code> (flujo visual)</p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2021-00-23.png" alt="Kanban Barista"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Columnas</span>
+                                <h3>Estados visibles</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Recibidos</strong><span>Nuevas comandas. Acción: pasar a En preparación.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>En preparación</strong><span>En proceso. Acción: marcar como Listo.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Listo</strong><span>Listo para entregar/recoger.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Entregados</strong><span>Histórico/finalizados.</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="barista-comanda">
+                <div class="section-header">
+                    <span class="eyebrow">Detalle</span>
+                    <h2>Detalle de la comanda</h2>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2021-00-34.png" alt="Detalle comanda"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Información</span>
+                                <h3>Qué se visualiza</h3>
+                            </header>
+                            <p>Productos, cantidades, personalizaciones, notas si aparecen, estado y acciones para cambiar estado.</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="barista-turno-caja">
+                <div class="section-header">
+                    <span class="eyebrow">Operación</span>
+                    <h2>Turno, Caja y POS (Barista)</h2>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2021-00-50.png" alt="Turno Barista"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Turno</span>
+                                <h3>Gestión visual</h3>
+                            </header>
+                            <p>Sección para gestionar turno desde UI.</p>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2021-00-55.png" alt="Caja Barista"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Caja</span>
+                                <h3><code>ui/barista/CashRegisterScreen.kt</code></h3>
+                            </header>
+                            <p>Pantalla de caja (apertura/cierre visible según flujo).</p>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2021-02-04.png" alt="POS Barista"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">POS</span>
+                                <h3><code>ui/pos/POSScreen.kt</code></h3>
+                            </header>
+                            <p>Punto de venta para crear venta desde el panel barista. Incluye productos, carrito, métodos de pago (UI).</p>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2021-02-08.png" alt="Mermas/Inventario"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Inventario/Mermas</span>
+                                <h3>Acceso visual</h3>
+                            </header>
+                            <p>Acceso a mermas/inventario desde paneles según rol.</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="admin-panel">
+                <div class="section-header">
+                    <span class="eyebrow">6. Rol Administrador</span>
+                    <h2>Panel de Administración</h2>
+                    <p><code>ui/admin/AdminPanelScreen.kt</code></p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2021-02-13.png" alt="Panel Admin"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Dashboard</span>
+                                <h3>Accesos del administrador</h3>
+                            </header>
+                            <p>Panel con accesos a: Usuarios, Categorías, Productos, Métodos de pago, Reportes, Pedidos, Insumos, Compras, Mermas, Proveedores, Gastos, Caja, Turnos, Promociones, Eventos, Perfil.</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="admin-catalogo">
+                <div class="section-header">
+                    <span class="eyebrow">Catálogo</span>
+                    <h2>Productos y Categorías</h2>
+                    <p><code>ui/admin/ManageProductsScreen.kt</code> · <code>ui/admin/CategoriesScreen.kt</code></p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2021-02-20.png" alt="Administrar productos"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Productos</span>
+                                <h3>Gestión de productos (UI)</h3>
+                            </header>
+                            <p>Listado, creación/edición/eliminación desde interfaz (solo acciones visibles).</p>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2021-02-29.png" alt="Categorías"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Categorías</span>
+                                <h3>Gestión de categorías (UI)</h3>
+                            </header>
+                            <p>Administración de categorías desde panel.</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="admin-usuarios">
+                <div class="section-header">
+                    <span class="eyebrow">Usuarios</span>
+                    <h2>Gestión de usuarios</h2>
+                    <p><code>ui/admin/UsersScreen.kt</code></p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2021-02-38.png" alt="Usuarios"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Listado</span>
+                                <h3>Usuarios del sistema</h3>
+                            </header>
+                            <p>Visualización y acciones disponibles desde UI.</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="admin-medios">
+                <div class="section-header">
+                    <span class="eyebrow">Pagos</span>
+                    <h2>Métodos de pago</h2>
+                    <p><code>ui/admin/PaymentMethodsScreen.kt</code></p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-media"><img data-lightbox src="Imagenes_manual/Captura%20desde%202026-10-20%2020-54-48.png" alt="Métodos de pago"></div>
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Configuración</span>
+                                <h3>Administrar medios de pago</h3>
+                            </header>
+                            <p>Listado y configuración desde panel de administración (solo UI).</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="admin-promos-eventos">
+                <div class="section-header">
+                    <span class="eyebrow">Marketing</span>
+                    <h2>Promociones y Eventos</h2>
+                    <p><code>ui/admin/PromocionesScreen.kt</code> · <code>ui/admin/EventosScreen.kt</code></p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Promociones</span>
+                                <h3>Administrar promociones</h3>
+                            </header>
+                            <p>Pantalla para gestionar promociones (interfaz).</p>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Eventos</span>
+                                <h3>Administrar eventos</h3>
+                            </header>
+                            <p>Pantalla para gestionar eventos (interfaz).</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="admin-reportes">
+                <div class="section-header">
+                    <span class="eyebrow">Reportes</span>
+                    <h2>Reportes y Archivados</h2>
+                    <p><code>ui/admin/ReportsScreen.kt</code> · <code>ui/admin/ArchivedReportsScreen.kt</code> · <code>ui/admin/ReportDetailScreen.kt</code></p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Reportes</span>
+                                <h3>Consulta de reportes</h3>
+                            </header>
+                            <p>Listado de reportes y acceso a detalle/archivados.</p>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Archivados</span>
+                                <h3>Reportes archivados</h3>
+                            </header>
+                            <p>Acceso a reportes archivados desde el panel.</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="admin-gestion">
+                <div class="section-header">
+                    <span class="eyebrow">Gestión</span>
+                    <h2>Compras / Insumos / Proveedores / Mermas / Gastos / Turnos / Caja</h2>
+                    <p>Módulos de gestión desde panel de administración y accesos.</p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Módulos</span>
+                                <h3>Secciones visibles</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Compras</strong><span>Gestión de compras (UI).</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Insumos</strong><span>Inventario de insumos (UI).</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Proveedores</strong><span>Gestión de proveedores (UI).</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Mermas</strong><span>Registro de mermas (UI).</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Gastos</strong><span>Gestión de gastos (UI).</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Turnos</strong><span>Gestión de turnos (UI).</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Caja</strong><span>Gestión de caja (UI).</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="comunes-ux">
+                <div class="section-header">
+                    <span class="eyebrow">7. Elementos comunes y UX</span>
+                    <h2>Componentes, estados y tema</h2>
+                    <p><code>ui/components/*</code> · <code>ui/theme/*</code></p>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Componentes</span>
+                                <h3>Comunes</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>LoadingIndicator</strong><span>Indicador de carga.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>EmptyState</strong><span>Estado vacío.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>ErrorMessage</strong><span>Mensajes de error visuales.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>TopBarWithBack / Nav</strong><span>Barras superiores/navegación.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>BottomBar</strong><span>Navegación inferior cliente.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>AsistenteFlotante</strong><span>Ícono flotante visible para autenticados.</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Diálogos/BottomSheets</strong><span>Carrito, pago, detalles.</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Tema</span>
+                                <h3>Claro / Oscuro</h3>
+                            </header>
+                            <p>Soporte de tema claro/oscuro. Se puede alternar desde Perfil. Colores definidos en <code>ui/theme/Theme.kt</code>.</p>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Autenticación visual</span>
+                                <h3>Requiere sesión</h3>
+                            </header>
+                            <p>Algunas acciones (Pedidos, POS, Chat) redirigen a Login si no hay sesión activa (comportamiento visual).</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="guia-rapida">
+                <div class="section-header">
+                    <span class="eyebrow">8. Guía rápida por tarea</span>
+                    <h2>"Recetas" para encontrar acciones al instante</h2>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tarea</th>
+                                <th>Ruta / Pantalla</th>
+                                <th>Pasos (UI)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Registrarme</strong></td><td>Login → Register</td><td>Completar datos → Crear cuenta → Verificar correo → Iniciar sesión.</td></tr>
+                            <tr><td><strong>Iniciar sesión</strong></td><td>Login</td><td>Correo + Contraseña → Iniciar Sesión.</td></tr>
+                            <tr><td><strong>Recuperar contraseña</strong></td><td>Login → ForgotPassword (o Deep Link)</td><td>Solicitar enlace / Abrir <code>kaffa://reset-password</code> → Restablecer → Volver a Login.</td></tr>
+                            <tr><td><strong>Hacer un pedido (Cliente)</strong></td><td>Home/Productos → Detalle → Agregar → Carrito → Pagar (UI) → Confirmar</td><td>Buscar/categoría → Seleccionar → Ajustar cantidad → Agregar → Revisar carrito → Elegir método → Confirmar.</td></tr>
+                            <tr><td><strong>Seguir mi pedido</strong></td><td>BottomBar "Pedidos" o Home → Mis Pedidos</td><td>Abrir pedido para ver estado/detalle.</td></tr>
+                            <tr><td><strong>Ver/promociones o eventos</strong></td><td>Home</td><td>Revisar popup al entrar o icono "Promociones y eventos".</td></tr>
+                            <tr><td><strong>Atender comandas (Barista)</strong></td><td>BaristaHome / Panel</td><td>Ver Kanban → Mover Recibido → En preparación → Listo → Entregado.</td></tr>
+                            <tr><td><strong>Hacer venta con POS (Barista)</strong></td><td>BaristaHome → POS / Caja</td><td>Agregar productos → Carrito → Seleccionar pago (UI) → Confirmar.</td></tr>
+                            <tr><td><strong>Administrar productos/categorías</strong></td><td>AdminPanel → Productos / Categorías</td><td>Ir a sección → Gestionar desde listado (UI).</td></tr>
+                            <tr><td><strong>Cambiar tema</strong></td><td>Perfil</td><td>Perfil → Alternar tema claro/oscuro.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="glosario">
+                <div class="section-header">
+                    <span class="eyebrow">9. Glosario</span>
+                    <h2>Términos UI usados</h2>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Término</th>
+                                <th>Significado (Frontend)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Comanda</strong></td><td>Pedido registrado que aparece en el panel del barista para su preparación.</td></tr>
+                            <tr><td><strong>Kanban</strong></td><td>Tablero con columnas por estado (Recibidos / En preparación / Listo / Entregados).</td></tr>
+                            <tr><td><strong>POS</strong></td><td>Punto de Venta. Pantalla para armar carrito y realizar venta.</td></tr>
+                            <tr><td><strong>Carrito</strong></td><td>Listado de productos agregados antes de pagar.</td></tr>
+                            <tr><td><strong>Bottom Bar</strong></td><td>Navegación inferior con accesos rápidos (cliente).</td></tr>
+                            <tr><td><strong>Deep Link</strong></td><td>Enlace tipo <code>kaffa://...</code> que abre pantalla específica de la app.</td></tr>
+                            <tr><td><strong>Asistente Flotante</strong></td><td>Ícono flotante visible para usuarios autenticados.</td></tr>
+                            <tr><td><strong>Comprobante</strong></td><td>Imagen/archivo adjuntado visualmente para pago por transferencia (UI).</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="anexos">
+                <div class="section-header">
+                    <span class="eyebrow">10. Anexos</span>
+                    <h2>Pantallas, rutas e índice de capturas</h2>
+                </div>
+                <div class="grid">
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Capturas usadas</span>
+                                <h3>doImagenes_manual/</h3>
+                            </header>
+                            <p>Se han referenciado las capturas reales existentes en el repositorio (sin generar imágenes nuevas).</p>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Login/Registro</strong><span>Captura desde 2026-10-20 20-51-56.png / 20-52-05.png</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Cliente</strong><span>20-52-47.png, 20-52-55.png, 20-53-10.png, 20-53-17.png, 20-53-23.png, 20-53-44.png, 20-53-53.png, 20-54-05.png, 20-54-15.png, 20-54-48.png</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Barista</strong><span>21-00-02.png, 21-00-23.png, 21-00-34.png, 21-00-50.png, 21-00-55.png, 21-02-04.png, 21-02-08.png</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Admin</strong><span>21-02-13.png, 21-02-20.png, 21-02-29.png, 21-02-38.png</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Logo/Splash</strong><span>17-49-31.png</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <div class="card-body">
+                            <header>
+                                <span class="step">Archivos relacionados</span>
+                                <h3>Código fuente revisado</h3>
+                            </header>
+                            <ul class="list">
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Navegación</strong><span>ui/navigation/AppNavigation.kt</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Autenticación</strong><span>ui/auth/*, MainActivity.kt (DeepLinks)</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Cliente</strong><span>ui/home/*, ui/cliente/*, ui/orders/*, ui/pos/*, ui/productos/*, ui/profile/*, ui/chat/*</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Barista</strong><span>ui/barista/*</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Admin</strong><span>ui/admin/*, ui/gestion/*</span></div></li>
+                                <li><div class="list-dot"></div><div class="list-content"><strong>Componentes/Tema</strong><span>ui/components/*, ui/theme/*</span></div></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+                <div class="note">
+                    <strong>Nota final</strong>
+                    <span>Este manual documenta ÚNICAMENTE el frontend. Cualquier mención a lógica, datos o servidor queda fuera del alcance.</span>
+                </div>
+            </section>
+        </main>
+    </div>
+    <footer>
+        <strong>MANUAL_DE_USUARIO_MOVIL · Kaffa · Solo Frontend</strong>
+        <span>Generado para documentación interactiva (HTML) con exportación a PDF y DOCX. Uso interno/inductivo.</span>
+    </footer>
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" id="lightbox-close">✕</button>
+        <img id="lightbox-img" alt="Ampliación de captura">
+    </div>
+    <script>
+        const navLinks = document.querySelectorAll('#side-nav a');
+        const sections = Array.from(document.querySelectorAll('main section, main article'));
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.getAttribute('id');
+                    navLinks.forEach(link => {
+                        link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+                    });
+                }
+            });
+        }, { rootMargin: '-30% 0px -60% 0px', threshold: 0.1 });
+        sections.forEach(section => section.id && observer.observe(section));
+        const search = document.getElementById('manual-search');
+        search.addEventListener('input', () => {
+            const term = search.value.toLowerCase();
+            navLinks.forEach(link => {
+                const text = link.textContent.toLowerCase();
+                link.style.display = term && !text.includes(term) ? 'none' : 'flex';
+            });
+            document.querySelectorAll('#side-nav .nav-group').forEach(group => {
+                const visible = Array.from(group.querySelectorAll('a')).some(a => a.style.display !== 'none');
+                group.style.display = visible ? 'block' : 'none';
+            });
+        });
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxClose = document.getElementById('lightbox-close');
+        document.querySelectorAll('[data-lightbox]').forEach(img => {
+            img.addEventListener('click', () => {
+                lightboxImg.src = img.src;
+                lightbox.classList.add('active');
+            });
+        });
+        lightboxClose.addEventListener('click', () => lightbox.classList.remove('active'));
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) lightbox.classList.remove('active');
+        });
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') lightbox.classList.remove('active');
+        });
+    </script>
+</body>
+</html>

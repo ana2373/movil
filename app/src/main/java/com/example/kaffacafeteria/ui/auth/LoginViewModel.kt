@@ -26,7 +26,8 @@ data class LoginUiState(
      */
     val emailSinVerificar: Boolean = false,
     val isResending: Boolean = false,
-    val mensajeVerificacion: String? = null
+    val mensajeVerificacion: String? = null,
+    val isVerifying: Boolean = false
 )
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
@@ -125,8 +126,13 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             uiState = LoginUiState()
         }
     }
+    fun verificarCodigo(codigo: String){
+        val correo = uiState.correo.trim()
+        if (correo.isBlank() || uiState.isVerifying) return
+    }
 
     fun clearError() {
         uiState = uiState.copy(error = null)
     }
 }
+

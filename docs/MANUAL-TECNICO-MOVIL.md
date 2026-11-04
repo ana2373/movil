@@ -991,12 +991,12 @@ KAFFA_API_HOST=192.168.80.15
 KAFFA_API_PORT=8000
 ```
 
-| Situación | Host resultante | URL base |
-|-----------|-----------------|----------|
+| Situación                                     | Host resultante   | URL base                                     |
+| --------------------------------------------- | ----------------- | -------------------------------------------- |
 | `KAFFA_API_HOST` + `KAFFA_API_PORT` definidos | El valor indicado | `http://<host>:<puerto>/api/v1/` (sin `:80`) |
-| Sólo `KAFFA_API_HOST` | El valor indicado | `http://<host>:8000/api/v1/` |
-| Nada definido, emulador | `10.0.2.2` | `http://10.0.2.2:8000/api/v1/` |
-| Nada definido, físico | `127.0.0.1` | `http://127.0.0.1:8000/api/v1/` |
+| Sólo `KAFFA_API_HOST`                         | El valor indicado | `http://<host>:8000/api/v1/`                 |
+| Nada definido, emulador                       | `10.0.2.2`        | `http://10.0.2.2:8000/api/v1/`               |
+| Nada definido, físico                         | `127.0.0.1`       | `http://127.0.0.1:8000/api/v1/`              |
 
 Los valores llegan al código como `BuildConfig.API_HOST` y
 `BuildConfig.API_PORT`, y los consume `util/Constants.kt`. **Tras cambiarlos hay
