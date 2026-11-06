@@ -9,6 +9,7 @@ import com.example.kaffacafeteria.data.remote.dto.RegisterResponse
 import com.example.kaffacafeteria.data.remote.dto.ResetPasswordRequest
 import com.example.kaffacafeteria.data.remote.dto.UpdateProfileRequest
 import com.example.kaffacafeteria.data.remote.dto.UsuarioDto
+import com.example.kaffacafeteria.data.remote.dto.VerifyCodeRequest
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -28,6 +29,13 @@ interface AuthApi {
      */
     @POST("registro")
     suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>
+
+    /**
+     * Confirma el código OTP enviado al correo. Sólo entonces el backend crea
+     * el usuario (antes queda en `registros_pendientes`).
+     */
+    @POST("email/verify-code")
+    suspend fun verificarCodigo(@Body request: VerifyCodeRequest): Response<MessageResponse>
 
     @GET("me")
     suspend fun me(): Response<UsuarioDto>

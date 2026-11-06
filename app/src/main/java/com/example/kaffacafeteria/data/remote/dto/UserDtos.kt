@@ -17,7 +17,8 @@ data class UsuarioCreateRequest(
     val correo: String,
     val password: String,
     @SerializedName("password_confirmation") val passwordConfirmation: String,
-    val roles: List<Int>? = null
+    /** Nombre canónico del backend para asignar roles. */
+    @SerializedName("rol_ids") val roles: List<Int>? = null
 )
 
 data class UsuarioUpdateRequest(
@@ -25,7 +26,7 @@ data class UsuarioUpdateRequest(
     val correo: String? = null,
     val password: String? = null,
     val activo: Boolean? = null,
-    val roles: List<Int>? = null
+    @SerializedName("rol_ids") val roles: List<Int>? = null
 )
 
 data class RolFullDto(

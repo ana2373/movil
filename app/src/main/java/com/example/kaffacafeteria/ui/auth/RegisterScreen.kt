@@ -110,6 +110,10 @@ private fun RegistrationPendingScreen(
     val colorScheme = MaterialTheme.colorScheme
     val focusManager = LocalFocusManager.current
 
+    LaunchedEffect(state.codigoVerificado) {
+        if (state.codigoVerificado) onIrAlLogin()
+    }
+
     Column(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
         TopAppBar(
             title = { Text("Verificar Cuenta") },
@@ -190,7 +194,7 @@ private fun RegistrationPendingScreen(
             // BOTÓN DE CONFIRMAR CÓDIGO
             Button(
                 onClick = { viewModel.verificarCodigo() },
-                enabled = !state.isVerifying && state.codigoVerificacion.isNotBlank(),
+                enabled = !state.isVerifying && state.codigoVerificacion.length == 6,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary, contentColor = colorScheme.onPrimary)
             ) {

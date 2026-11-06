@@ -29,6 +29,9 @@ interface AuthRepository {
     suspend fun isLoggedIn(): Boolean
     fun getTokenFlow(): kotlinx.coroutines.flow.Flow<String?>
 
+    /** Confirma el código OTP y crea la cuenta verificada en el backend. */
+    suspend fun verificarCodigo(correo: String, codigo: String): Resource<String>
+
     /** Reenvía el correo de verificación de la cuenta. */
     suspend fun reenviarVerificacion(correo: String): Resource<String>
 

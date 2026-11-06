@@ -23,7 +23,10 @@ data class AdminUiState(
     val mediosPago: List<MedioPagoDto> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    /** Error/confirmación del formulario de usuario (diálogo de alta/edición). */
+    val userFormError: String? = null,
+    val userFormSaved: Boolean = false
 )
 
 data class UserFormState(
@@ -136,6 +139,7 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
 
     fun initCreateUser() {
         userForm = UserFormState()
+        uiState = uiState.copy(userFormError = null, userFormSaved = false)
     }
 
     fun initEditUser(usuario: UsuarioFullDto) {
@@ -146,6 +150,11 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
             isEditing = true,
             editingUserId = usuario.id
         )
+        uiState = uiState.copy(userFormError = null, userFormSaved = false)
+    }
+
+    fun clearUserFormFeedback() {
+        uiState = uiState.copy(userFormError = null, userFormSaved = false)
     }
 
     fun updateUserFormNombre(value: String) { userForm = userForm.copy(nombre = value) }
@@ -162,49 +171,92 @@ fun setUserRoles(roleIds: List<Int>) {
     }
 
     fun saveUser() {
+        val f = userForm
+        val validationError = when {
+            f.nombre.isBlank() -> "El nombre es requerido"
+            f.correo.isBlank() -> "El correo es requerido"
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(f.correo.trim()).matches() ->
+                "El correo no tiene un formato válido"
+            !f.isEditing && f.password.isBlank() -> "La contraseña es requerida"
+            f.password.isNotBlank() -> passwordPolicyError(f.password)
+            f.selectedRoles.isEmpty() -> "Selecciona al menos un rol"
+            else -> null
+        }
+        if (validationError != null) {
+            uiState = uiState.copy(userFormError = validationError)
+            return
+        }
+
         viewModelScope.launch {
-            uiState = uiState.copy(isLoading = true, error = null)
+            uiState = uiState.copy(
+                isLoading = true,
+                error = null,
+                userFormError = null,
+                userFormSaved = false,
+                successMessage = null
+            )
             try {
-                if (userForm.isEditing && userForm.editingUserId != null) {
+                if (f.isEditing && f.editingUserId != null) {
                     val request = UsuarioUpdateRequest(
-                        nombre = userForm.nombre.ifBlank { null },
-                        correo = userForm.correo.ifBlank { null },
-                        password = userForm.password.ifBlank { null },
-                        roles = userForm.selectedRoles.toList()
+                        nombre = f.nombre.trim().ifBlank { null },
+                        correo = f.correo.trim().ifBlank { null },
+                        password = f.password.ifBlank { null },
+                        roles = f.selectedRoles.toList()
                     )
-                    val response = userApi.updateUsuario(userForm.editingUserId!!, request)
+                    val response = userApi.updateUsuario(f.editingUserId, request)
                     if (response.isSuccessful) {
-                        uiState = uiState.copy(isLoading = false, successMessage = "Usuario actualizado")
+                        uiState = uiState.copy(
+                            isLoading = false,
+                            successMessage = "Usuario actualizado",
+                            userFormSaved = true
+                        )
                         loadUsuarios()
                     } else {
                         uiState = uiState.copy(
                             isLoading = false,
-                            error = ApiErrors.parse(response, "No se pudo actualizar el usuario")
+                            userFormError = ApiErrors.parse(response, "No se pudo actualizar el usuario")
                         )
                     }
                 } else {
                     val request = UsuarioCreateRequest(
-                        nombre = userForm.nombre,
-                        correo = userForm.correo,
-                        password = userForm.password,
-                        passwordConfirmation = userForm.password,
-                        roles = userForm.selectedRoles.toList()
+                        nombre = f.nombre.trim(),
+                        correo = f.correo.trim(),
+                        password = f.password,
+                        passwordConfirmation = f.password,
+                        roles = f.selectedRoles.toList()
                     )
                     val response = userApi.createUsuario(request)
                     if (response.isSuccessful) {
-                        uiState = uiState.copy(isLoading = false, successMessage = "Usuario creado")
+                        uiState = uiState.copy(
+                            isLoading = false,
+                            successMessage = "Usuario creado",
+                            userFormSaved = true
+                        )
                         loadUsuarios()
                     } else {
                         uiState = uiState.copy(
                             isLoading = false,
-                            error = ApiErrors.parse(response, "No se pudo crear el usuario")
+                            userFormError = ApiErrors.parse(response, "No se pudo crear el usuario")
                         )
                     }
                 }
             } catch (e: Exception) {
-                uiState = uiState.copy(isLoading = false, error = e.message)
+                uiState = uiState.copy(
+                    isLoading = false,
+                    userFormError = e.message ?: "Error de conexión"
+                )
             }
         }
+    }
+
+    /** Misma política del backend (8+, mayúscula, minúscula, número y símbolo). */
+    private fun passwordPolicyError(password: String): String? = when {
+        password.length < 8 -> "La contraseña debe tener al menos 8 caracteres"
+        !password.any { it.isUpperCase() } -> "La contraseña debe incluir mayúsculas"
+        !password.any { it.isLowerCase() } -> "La contraseña debe incluir minúsculas"
+        !password.any { it.isDigit() } -> "La contraseña debe incluir números"
+        !password.any { !it.isLetterOrDigit() } -> "La contraseña debe incluir un símbolo"
+        else -> null
     }
 
     fun deleteUser(id: Int) {

@@ -62,6 +62,13 @@ fun AdminPanelScreen(
         dashboardViewModel.load()
     }
 
+    LaunchedEffect(viewModel.uiState.userFormSaved) {
+        if (viewModel.uiState.userFormSaved && showAddBarista) {
+            showAddBarista = false
+            viewModel.clearUserFormFeedback()
+        }
+    }
+
     Column(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
         TopAppBar(
             title = { Text("Panel de Administración") },
@@ -164,7 +171,11 @@ fun AdminPanelScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Tarjeta destacada: Agregar barista
-            AddBaristaCard(onClick = { showAddBarista = true })
+            AddBaristaCard(onClick = {
+                viewModel.initCreateUser()
+                viewModel.clearUserFormFeedback()
+                showAddBarista = true
+            })
         }
     }
 
@@ -189,7 +200,8 @@ fun AdminPanelScreen(
         AddBaristaDialog(
             roles = viewModel.uiState.roles,
             isLoading = viewModel.uiState.isLoading,
-            onDismiss = { if (!viewModel.uiState.isLoading) showAddBarista = false },
+            error = viewModel.uiState.userFormError,
+            onDismiss = { if (!viewModel.uiState.isLoading) { showAddBarista = false; viewModel.clearUserFormFeedback() } },
             onConfirm = { nombre, correo, password, roleIds ->
                 viewModel.initCreateUser()
                 viewModel.updateUserFormNombre(nombre)
@@ -197,9 +209,6 @@ fun AdminPanelScreen(
                 viewModel.updateUserFormPassword(password)
                 viewModel.setUserRoles(roleIds)
                 viewModel.saveUser()
-                if (!viewModel.uiState.isLoading) {
-                    showAddBarista = false
-                }
             }
         )
     }
@@ -342,6 +351,7 @@ fun AdminCard(icon: ImageVector, title: String, description: String, color: Colo
 fun AddBaristaDialog(
     roles: List<RolFullDto>,
     isLoading: Boolean,
+    error: String? = null,
     onDismiss: () -> Unit,
     onConfirm: (String, String, String, List<Int>) -> Unit
 ) {
@@ -376,8 +386,14 @@ fun AddBaristaDialog(
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     singleLine = true, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant)
                 )
+                if (error != null) {
+                    Text(error, style = MaterialTheme.typography.bodySmall, color = colorScheme.error)
+                }
                 Text("Rol asignado:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                 Text("Barista (obligatorio)", style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
+                if (roles.isEmpty()) {
+                    Text("No se pudieron cargar los roles. Cierra y vuelve a abrir el formulario.", style = MaterialTheme.typography.bodySmall, color = colorScheme.error)
+                }
                 if (roles.isNotEmpty()) {
                     Column {
                         roles.forEach { role ->

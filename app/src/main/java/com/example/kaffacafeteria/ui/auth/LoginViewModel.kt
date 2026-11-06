@@ -126,9 +126,32 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             uiState = LoginUiState()
         }
     }
+    /** Confirma el OTP; al aceptarse, reintenta el login automáticamente. */
     fun verificarCodigo(codigo: String) {
         val correo = uiState.correo.trim()
         if (correo.isBlank() || uiState.isVerifying) return
+        if (codigo.length != 6) {
+            uiState = uiState.copy(error = "El código debe tener 6 dígitos")
+            return
+        }
+
+        viewModelScope.launch {
+            uiState = uiState.copy(isVerifying = true, error = null)
+            when (val result = authRepository.verificarCodigo(correo, codigo)) {
+                is Resource.Success -> {
+                    uiState = uiState.copy(
+                        isVerifying = false,
+                        emailSinVerificar = false,
+                        mensajeVerificacion = result.data
+                    )
+                    login()
+                }
+                is Resource.Error -> {
+                    uiState = uiState.copy(isVerifying = false, error = result.message)
+                }
+                is Resource.Loading -> {}
+            }
+        }
     }
 
     fun clearError() {

@@ -31,6 +31,12 @@ data class RegisterResponse(
     val correo: String? = null
 )
 
+/** Cuerpo de `POST /email/verify-code`. */
+data class VerifyCodeRequest(
+    val correo: String,
+    val codigo: String
+)
+
 /** Cuerpo de `POST /forgot-password`. */
 data class ForgotPasswordRequest(val correo: String)
 

@@ -32,11 +32,18 @@ fun UsersScreen(
 
     LaunchedEffect(Unit) { viewModel.loadUsuarios(); viewModel.loadRoles() }
 
+    LaunchedEffect(state.userFormSaved) {
+        if (state.userFormSaved && showCreateDialog) {
+            showCreateDialog = false
+            viewModel.clearUserFormFeedback()
+        }
+    }
+
     Column(modifier = Modifier.fillMaxSize().background(colorScheme.background)) {
         TopAppBar(
             title = { Text("Usuarios") },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = colorScheme.onPrimary) } },
-            actions = { IconButton(onClick = { viewModel.initCreateUser(); showCreateDialog = true }) { Icon(Icons.Default.Add, contentDescription = "Crear usuario", tint = colorScheme.onPrimary) } },
+            actions = { IconButton(onClick = { viewModel.initCreateUser(); viewModel.clearUserFormFeedback(); showCreateDialog = true }) { Icon(Icons.Default.Add, contentDescription = "Crear usuario", tint = colorScheme.onPrimary) } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary, titleContentColor = colorScheme.onPrimary)
         )
 
@@ -71,14 +78,15 @@ fun UsersScreen(
         CreateUserDialog(
             roles = state.roles,
             isLoading = state.isLoading,
-            onDismiss = { showCreateDialog = false },
+            error = state.userFormError,
+            onDismiss = { if (!state.isLoading) { showCreateDialog = false; viewModel.clearUserFormFeedback() } },
             onConfirm = { nombre, correo, password, roleIds ->
+                viewModel.initCreateUser()
                 viewModel.updateUserFormNombre(nombre)
                 viewModel.updateUserFormCorreo(correo)
                 viewModel.updateUserFormPassword(password)
                 roleIds.forEach { viewModel.toggleUserRole(it) }
                 viewModel.saveUser()
-                showCreateDialog = false
             }
         )
     }
@@ -88,6 +96,7 @@ fun UsersScreen(
 fun CreateUserDialog(
     roles: List<com.example.kaffacafeteria.data.remote.dto.RolFullDto>,
     isLoading: Boolean,
+    error: String? = null,
     onDismiss: () -> Unit,
     onConfirm: (String, String, String, List<Int>) -> Unit
 ) {
@@ -107,6 +116,9 @@ fun CreateUserDialog(
                 OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant))
                 OutlinedTextField(value = correo, onValueChange = { correo = it }, label = { Text("Correo") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant))
                 OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Contraseña") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colorScheme.primary, focusedLabelColor = colorScheme.primary, unfocusedBorderColor = colorScheme.outline, unfocusedLabelColor = colorScheme.onSurfaceVariant))
+                if (error != null) {
+                    Text(error, style = MaterialTheme.typography.bodySmall, color = colorScheme.error)
+                }
                 Text("Rol (los clientes se registran por su cuenta):", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                 rolesGestionables.forEach { role ->
                     Row(verticalAlignment = Alignment.CenterVertically) {

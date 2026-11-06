@@ -7,6 +7,7 @@ import com.example.kaffacafeteria.data.remote.dto.LoginRequest
 import com.example.kaffacafeteria.data.remote.dto.RegisterRequest
 import com.example.kaffacafeteria.data.remote.dto.ResetPasswordRequest
 import com.example.kaffacafeteria.data.remote.dto.UpdateProfileRequest
+import com.example.kaffacafeteria.data.remote.dto.VerifyCodeRequest
 import com.example.kaffacafeteria.domain.model.Role
 import com.example.kaffacafeteria.domain.model.User
 import com.example.kaffacafeteria.domain.repository.AuthRepository
@@ -69,6 +70,25 @@ class AuthRepositoryImpl(
             } else {
                 Resource.Error(
                     ApiErrors.parse(response, "No se pudo completar el registro"),
+                    response.code()
+                )
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Error de conexión")
+        }
+    }
+
+    override suspend fun verificarCodigo(correo: String, codigo: String): Resource<String> {
+        return try {
+            val response = authApi.verificarCodigo(VerifyCodeRequest(correo, codigo))
+            if (response.isSuccessful) {
+                Resource.Success(
+                    response.body()?.message
+                        ?: "Correo verificado correctamente. Ya puedes iniciar sesión."
+                )
+            } else {
+                Resource.Error(
+                    ApiErrors.parse(response, "No se pudo verificar el código"),
                     response.code()
                 )
             }

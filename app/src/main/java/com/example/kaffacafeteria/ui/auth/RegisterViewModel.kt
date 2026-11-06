@@ -37,7 +37,10 @@ data class RegisterUiState(
 
     val codigoError: String? = null,
 
-    val isVerifying: Boolean = false
+    val isVerifying: Boolean = false,
+
+    /** El código fue aceptado y la cuenta quedó creada en el backend. */
+    val codigoVerificado: Boolean = false
 )
 
 class RegisterViewModel(application: Application) : AndroidViewModel(application) {
@@ -144,10 +147,42 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
         uiState = RegisterUiState()
     }
     fun updateCodigoVerificacion(codigo: String) {
-        uiState = uiState.copy(codigoVerificacion = codigo, codigoError = null)
+        uiState = uiState.copy(
+            codigoVerificacion = codigo.filter { it.isDigit() }.take(6),
+            codigoError = null,
+            error = null
+        )
     }
+
+    /** Confirma el código OTP: el backend crea la cuenta recién en este paso. */
     fun verificarCodigo() {
-        // Llamada a API backend enviando state.correoRegistrado y state.codigoVerificacion
+        val s = uiState
+        if (s.isVerifying) return
+        if (s.correoRegistrado.isBlank()) {
+            uiState = uiState.copy(codigoError = "No hay un correo pendiente de verificación")
+            return
+        }
+        if (s.codigoVerificacion.length != 6) {
+            uiState = uiState.copy(codigoError = "El código debe tener 6 dígitos")
+            return
+        }
+
+        viewModelScope.launch {
+            uiState = uiState.copy(isVerifying = true, codigoError = null, error = null)
+            when (val result = authRepository.verificarCodigo(s.correoRegistrado, s.codigoVerificacion)) {
+                is Resource.Success -> {
+                    uiState = uiState.copy(
+                        isVerifying = false,
+                        codigoVerificado = true,
+                        mensajeVerificacion = result.data
+                    )
+                }
+                is Resource.Error -> {
+                    uiState = uiState.copy(isVerifying = false, codigoError = result.message)
+                }
+                is Resource.Loading -> {}
+            }
+        }
     }
 
     /** Permite corregir el correo y reintentar el registro. */
